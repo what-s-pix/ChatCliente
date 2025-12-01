@@ -160,40 +160,12 @@ public class ChatUI extends JFrame {
     
     private void cargarDatos() {
         try {
-            // Cargar usuarios
+            // Solo ENVIAMOS las peticiones.
+            // Las respuestas llegarán por el hilo de recepción y se procesan en procesarPeticionRecibida().
             cliente.enviar(new Peticion("OBTENER_USUARIOS", null));
-            Peticion respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("LISTA_USUARIOS")) {
-                usuarios = (List<Usuario>) respuesta.getDatos();
-                actualizarListaUsuarios();
-            }
-            
-            // Cargar amigos
             cliente.enviar(new Peticion("OBTENER_AMIGOS", null));
-            respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("LISTA_AMIGOS")) {
-                amigos = (List<Amistad>) respuesta.getDatos();
-                actualizarListaAmigos();
-            }
-            
-            // Cargar grupos
             cliente.enviar(new Peticion("OBTENER_GRUPOS", null));
-            respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("LISTA_GRUPOS")) {
-                grupos = (List<Grupo>) respuesta.getDatos();
-                actualizarListaGrupos();
-            }
-            
-            // Cargar invitaciones pendientes
             cliente.enviar(new Peticion("OBTENER_INVITACIONES_GRUPO", null));
-            respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("LISTA_INVITACIONES_GRUPO")) {
-                List<InvitacionGrupo> invitaciones = (List<InvitacionGrupo>) respuesta.getDatos();
-                if (!invitaciones.isEmpty()) {
-                    mostrarInvitaciones(invitaciones);
-                }
-            }
-            
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage());
         }
@@ -282,16 +254,8 @@ public class ChatUI extends JFrame {
     
     private void cargarHistorial(int idOtroUsuario) {
         try {
+            // Pedimos el historial; la respuesta se procesa en procesarPeticionRecibida()
             cliente.enviar(new Peticion("OBTENER_HISTORIAL", idOtroUsuario));
-            Peticion respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("HISTORIAL_MENSAJES")) {
-                List<Mensaje> historial = (List<Mensaje>) respuesta.getDatos();
-                for (Mensaje m : historial) {
-                    String remitente = (m.getFk_remitente() == usuarioActual.getPk_usuario()) ? 
-                                      "Tú" : m.getNombreRemitente();
-                    areaChat.append("[" + m.getFecha_envio() + "] " + remitente + ": " + m.getMensaje() + "\n");
-                }
-            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar historial: " + e.getMessage());
         }
@@ -299,16 +263,8 @@ public class ChatUI extends JFrame {
     
     private void cargarHistorialGrupo(int idGrupo) {
         try {
+            // Pedimos el historial del grupo; se procesa de forma asíncrona
             cliente.enviar(new Peticion("OBTENER_HISTORIAL_GRUPO", idGrupo));
-            Peticion respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("HISTORIAL_GRUPO")) {
-                List<MensajeGrupo> historial = (List<MensajeGrupo>) respuesta.getDatos();
-                for (MensajeGrupo m : historial) {
-                    String remitente = (m.getFk_remitente() == usuarioActual.getPk_usuario()) ? 
-                                      "Tú" : m.getNombreRemitente();
-                    areaChat.append("[" + m.getFecha_envio() + "] " + remitente + ": " + m.getMensaje() + "\n");
-                }
-            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar historial: " + e.getMessage());
         }
@@ -320,31 +276,21 @@ public class ChatUI extends JFrame {
         
         try {
             if (esChatPrivado && destinatarioActual != null) {
+                // Envío de mensaje privado: el servidor notificará al otro cliente
                 Mensaje mensaje = new Mensaje(usuarioActual.getPk_usuario(), 
                                              destinatarioActual.getPk_usuario(), texto);
                 cliente.enviar(new Peticion("ENVIAR_MENSAJE_PRIVADO", mensaje));
-                Peticion respuesta = cliente.recibir();
-                
-                if (respuesta.getAccion().equals("MENSAJE_ENVIADO")) {
-                    areaChat.append("[Ahora] Tú: " + texto + "\n");
-                    campoMensaje.setText("");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
-                }
+                // Mostramos nuestro propio mensaje inmediatamente
+                areaChat.append("[Ahora] Tú: " + texto + "\n");
+                campoMensaje.setText("");
             } else if (!esChatPrivado && grupoActual != null) {
                 MensajeGrupo mensaje = new MensajeGrupo();
                 mensaje.setFk_grupo(grupoActual.getPk_grupo());
                 mensaje.setFk_remitente(usuarioActual.getPk_usuario());
                 mensaje.setMensaje(texto);
                 cliente.enviar(new Peticion("ENVIAR_MENSAJE_GRUPO", mensaje));
-                Peticion respuesta = cliente.recibir();
-                
-                if (respuesta.getAccion().equals("MENSAJE_ENVIADO")) {
-                    areaChat.append("[Ahora] Tú: " + texto + "\n");
-                    campoMensaje.setText("");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
-                }
+                areaChat.append("[Ahora] Tú: " + texto + "\n");
+                campoMensaje.setText("");
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al enviar mensaje: " + e.getMessage());
@@ -375,13 +321,9 @@ public class ChatUI extends JFrame {
             for (Usuario u : usuarios) {
                 if (seleccionado.contains(u.getUsername())) {
                     try {
+                        // Solo enviamos la solicitud; la respuesta se manejará en procesarPeticionRecibida()
                         cliente.enviar(new Peticion("ENVIAR_SOLICITUD_AMISTAD", u.getPk_usuario()));
-                        Peticion respuesta = cliente.recibir();
-                        if (respuesta.getAccion().equals("SOLICITUD_ENVIADA")) {
-                            JOptionPane.showMessageDialog(this, "Solicitud de amistad enviada");
-                        } else {
-                            JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
-                        }
+                        JOptionPane.showMessageDialog(this, "Solicitud de amistad enviada (esperando respuesta)");
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
                     }
@@ -397,21 +339,9 @@ public class ChatUI extends JFrame {
         
         try {
             Grupo grupo = new Grupo(titulo.trim(), usuarioActual.getPk_usuario());
+            // Enviamos la petición de creación; la respuesta se procesará de forma asíncrona
             cliente.enviar(new Peticion("CREAR_GRUPO", grupo));
-            Peticion respuesta = cliente.recibir();
-            
-            if (respuesta.getAccion().equals("GRUPO_CREADO")) {
-                Grupo nuevoGrupo = (Grupo) respuesta.getDatos();
-                if (grupos == null) grupos = new ArrayList<>();
-                grupos.add(nuevoGrupo);
-                actualizarListaGrupos();
-                JOptionPane.showMessageDialog(this, "Grupo creado. Ahora invita a al menos 2 personas más.");
-                
-                // Invitar usuarios
-                invitarAGrupo(nuevoGrupo.getPk_grupo());
-            } else {
-                JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
-            }
+            // El servidor devolverá GRUPO_CREADO o GRUPO_ERROR que se maneja en procesarPeticionRecibida()
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
@@ -440,13 +370,9 @@ public class ChatUI extends JFrame {
                 if (seleccionado.contains(u.getUsername())) {
                     try {
                         Object[] datos = {idGrupo, u.getPk_usuario()};
+                        // Enviamos invitación; la respuesta se maneja de forma asíncrona
                         cliente.enviar(new Peticion("INVITAR_A_GRUPO", datos));
-                        Peticion respuesta = cliente.recibir();
-                        if (respuesta.getAccion().equals("INVITACION_ENVIADA")) {
-                            JOptionPane.showMessageDialog(this, "Invitación enviada");
-                        } else {
-                            JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
-                        }
+                        JOptionPane.showMessageDialog(this, "Invitación enviada (esperando respuesta)");
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
                     }
@@ -458,16 +384,8 @@ public class ChatUI extends JFrame {
     
     private void verSolicitudes() {
         try {
+            // Pedimos la lista de solicitudes; se manejará en procesarPeticionRecibida()
             cliente.enviar(new Peticion("OBTENER_SOLICITUDES", null));
-            Peticion respuesta = cliente.recibir();
-            if (respuesta.getAccion().equals("LISTA_SOLICITUDES")) {
-                List<Amistad> solicitudes = (List<Amistad>) respuesta.getDatos();
-                if (solicitudes.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "No tienes solicitudes pendientes");
-                } else {
-                    mostrarSolicitudesAmistad(solicitudes);
-                }
-            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
@@ -487,12 +405,10 @@ public class ChatUI extends JFrame {
             try {
                 if (opcion == 0) { // Aceptar
                     cliente.enviar(new Peticion("ACEPTAR_SOLICITUD_AMISTAD", s.getPk_amistad()));
-                    cliente.recibir();
-                    JOptionPane.showMessageDialog(this, "Solicitud aceptada");
-                    cargarDatos(); // Recargar lista de amigos
+                    // La respuesta (SOLICITUD_ACEPTADA o SOLICITUD_ERROR) se maneja de forma asíncrona
                 } else if (opcion == 1) { // Rechazar
                     cliente.enviar(new Peticion("RECHAZAR_SOLICITUD_AMISTAD", s.getPk_amistad()));
-                    cliente.recibir();
+                    // Se manejará la respuesta en procesarPeticionRecibida()
                 }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
@@ -514,19 +430,10 @@ public class ChatUI extends JFrame {
             try {
                 if (opcion == 0) { // Aceptar
                     cliente.enviar(new Peticion("ACEPTAR_INVITACION_GRUPO", inv.getPk_invitacion()));
-                    Peticion respuesta = cliente.recibir();
-                    if (respuesta.getAccion().equals("INVITACION_ACEPTADA")) {
-                        JOptionPane.showMessageDialog(this, "Invitación aceptada");
-                        cargarDatos(); // Recargar grupos
-                    } else if (respuesta.getAccion().equals("GRUPO_ELIMINADO")) {
-                        JOptionPane.showMessageDialog(this, respuesta.getDatos().toString());
-                    }
+                    // La respuesta se manejará en procesarPeticionRecibida()
                 } else if (opcion == 1) { // Rechazar
                     cliente.enviar(new Peticion("RECHAZAR_INVITACION_GRUPO", inv.getPk_invitacion()));
-                    Peticion respuesta = cliente.recibir();
-                    if (respuesta.getAccion().equals("GRUPO_ELIMINADO")) {
-                        JOptionPane.showMessageDialog(this, respuesta.getDatos().toString());
-                    }
+                    // Respuesta asíncrona
                 }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
@@ -555,6 +462,62 @@ public class ChatUI extends JFrame {
     
     private void procesarPeticionRecibida(Peticion p) {
         switch (p.getAccion()) {
+            // --- Listas e información inicial ---
+            case "LISTA_USUARIOS":
+                usuarios = (List<Usuario>) p.getDatos();
+                actualizarListaUsuarios();
+                break;
+                
+            case "LISTA_AMIGOS":
+                amigos = (List<Amistad>) p.getDatos();
+                actualizarListaAmigos();
+                break;
+                
+            case "LISTA_GRUPOS":
+                grupos = (List<Grupo>) p.getDatos();
+                actualizarListaGrupos();
+                break;
+                
+            case "LISTA_INVITACIONES_GRUPO":
+                List<InvitacionGrupo> invitaciones = (List<InvitacionGrupo>) p.getDatos();
+                if (invitaciones != null && !invitaciones.isEmpty()) {
+                    mostrarInvitaciones(invitaciones);
+                }
+                break;
+                
+            case "LISTA_SOLICITUDES":
+                List<Amistad> solicitudes = (List<Amistad>) p.getDatos();
+                if (solicitudes == null || solicitudes.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No tienes solicitudes pendientes");
+                } else {
+                    mostrarSolicitudesAmistad(solicitudes);
+                }
+                break;
+
+            // --- Historiales ---
+            case "HISTORIAL_MENSAJES":
+                List<Mensaje> historial = (List<Mensaje>) p.getDatos();
+                if (historial != null) {
+                    for (Mensaje m : historial) {
+                        String remitente = (m.getFk_remitente() == usuarioActual.getPk_usuario()) ? 
+                                           "Tú" : m.getNombreRemitente();
+                        areaChat.append("[" + m.getFecha_envio() + "] " + remitente + ": " + m.getMensaje() + "\n");
+                    }
+                }
+                break;
+                
+            case "HISTORIAL_GRUPO":
+                List<MensajeGrupo> historialGrupo = (List<MensajeGrupo>) p.getDatos();
+                if (historialGrupo != null) {
+                    for (MensajeGrupo m : historialGrupo) {
+                        String remitente = (m.getFk_remitente() == usuarioActual.getPk_usuario()) ? 
+                                           "Tú" : m.getNombreRemitente();
+                        areaChat.append("[" + m.getFecha_envio() + "] " + remitente + ": " + m.getMensaje() + "\n");
+                    }
+                }
+                break;
+
+            // --- Mensajes en tiempo real ---
             case "MENSAJE_PRIVADO":
                 Mensaje mensaje = (Mensaje) p.getDatos();
                 if (destinatarioActual != null && mensaje.getFk_remitente() == destinatarioActual.getPk_usuario()) {
@@ -575,16 +538,76 @@ public class ChatUI extends JFrame {
                 }
                 break;
                 
+            case "MENSAJE_ENVIADO":
+                // ACK opcional del servidor; ya mostramos nuestro mensaje localmente
+                break;
+                
+            case "MENSAJE_ERROR":
+                JOptionPane.showMessageDialog(this, "Error al enviar mensaje: " + p.getDatos());
+                break;
+
+            // --- Sistema de amigos ---
             case "NUEVA_SOLICITUD_AMISTAD":
                 JOptionPane.showMessageDialog(this, "Tienes una nueva solicitud de amistad");
                 cargarDatos();
                 break;
                 
+            case "SOLICITUD_ENVIADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                break;
+                
+            case "SOLICITUD_ERROR":
+                JOptionPane.showMessageDialog(this, "Error en solicitud de amistad: " + p.getDatos());
+                break;
+                
+            case "SOLICITUD_ACEPTADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                cargarDatos();
+                break;
+                
+            case "SOLICITUD_RECHAZADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                break;
+                
+            // --- Invitaciones a grupos ---
             case "NUEVA_INVITACION_GRUPO":
                 InvitacionGrupo inv = (InvitacionGrupo) p.getDatos();
                 mostrarInvitaciones(java.util.Arrays.asList(inv));
                 break;
                 
+            case "INVITACION_ENVIADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                break;
+                
+            case "INVITACION_ERROR":
+                JOptionPane.showMessageDialog(this, "Error en invitación: " + p.getDatos());
+                break;
+                
+            case "INVITACION_ACEPTADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                cargarDatos();
+                break;
+                
+            case "INVITACION_RECHAZADA":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                break;
+                
+            case "GRUPO_ELIMINADO":
+                JOptionPane.showMessageDialog(this, String.valueOf(p.getDatos()));
+                cargarDatos();
+                break;
+                
+            case "GRUPO_CREADO":
+                Grupo nuevoGrupo = (Grupo) p.getDatos();
+                if (grupos == null) grupos = new ArrayList<>();
+                grupos.add(nuevoGrupo);
+                actualizarListaGrupos();
+                JOptionPane.showMessageDialog(this, "Grupo creado. Ahora invita a al menos 2 personas más.");
+                // Lanzamos diálogo para invitar al menos a otro usuario
+                invitarAGrupo(nuevoGrupo.getPk_grupo());
+                break;
+
+            // --- Mensajes pendientes ---
             case "MENSAJES_PENDIENTES":
                 List<MensajePendiente> pendientes = (List<MensajePendiente>) p.getDatos();
                 if (!pendientes.isEmpty()) {
