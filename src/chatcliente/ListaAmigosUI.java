@@ -186,12 +186,14 @@ public class ListaAmigosUI extends JFrame {
     private void escucharServidor() {
         try {
             while (escuchando) {
-                Peticion p = Cliente.getInstance().recibir();
-                String accion = p.getAccion();
-                Object datos = p.getDatos();
+                try {
+                    Peticion p = Cliente.getInstance().recibir();
+                    String accion = p.getAccion();
+                    Object datos = p.getDatos();
 
-                SwingUtilities.invokeLater(() -> {
-                    switch (accion) {
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            switch (accion) {
                         // AMIGOS
                         case "LISTA_AMIGOS_OK":
                             if (modoVista == 0) actualizarListaAmigos((ArrayList<Usuario>) datos);
@@ -224,6 +226,17 @@ public class ListaAmigosUI extends JFrame {
                         case "LISTA_SOLICITUDES_OK":
                             procesarSolicitudesAmistad((ArrayList<String>) datos);
                             break;
+                        case "SOLICITUD_ENVIADA_OK":
+                            JOptionPane.showMessageDialog(this, datos);
+                            if (modoVista == 0) pedirListaAmigos(); // Refrescar
+                            break;
+                        case "SOLICITUD_ERROR":
+                            JOptionPane.showMessageDialog(this, "Error: " + datos, "Error", JOptionPane.ERROR_MESSAGE);
+                            break;
+                        case "ACEPTAR_SOLICITUD_OK":
+                            JOptionPane.showMessageDialog(this, datos);
+                            if (modoVista == 0) pedirListaAmigos(); // Refrescar
+                            break;
                             
                         // GRUPOS
                         case "LISTA_GRUPOS_OK":
@@ -239,6 +252,13 @@ public class ListaAmigosUI extends JFrame {
                             JOptionPane.showMessageDialog(this, datos);
                             if (modoVista == 1) pedirListaGrupos(); // Refrescar
                             break;
+                        case "ACEPTAR_GRUPO_OK":
+                            JOptionPane.showMessageDialog(this, datos);
+                            if (modoVista == 1) pedirListaGrupos(); // Refrescar
+                            break;
+                        case "ERROR_GRUPO":
+                            JOptionPane.showMessageDialog(this, "Error: " + datos, "Error", JOptionPane.ERROR_MESSAGE);
+                            break;
 
                         // GENÉRICOS
                         default:
@@ -246,10 +266,24 @@ public class ListaAmigosUI extends JFrame {
                                 // Mensajes simples (OK/Error)
                                 // JOptionPane.showMessageDialog(this, datos);
                             }
-                    }
-                });
+                        } catch (Exception ex) {
+                            System.err.println("Error procesando petición: " + ex.getMessage());
+                            ex.printStackTrace();
+                        }
+                    });
+                } catch (java.io.EOFException e) {
+                    // Conexión cerrada normalmente
+                    break;
+                } catch (java.io.StreamCorruptedException e) {
+                    // Error de serialización - ignorar este paquete y continuar
+                    System.err.println("Error de serialización, ignorando paquete: " + e.getMessage());
+                    continue;
+                }
             }
-        } catch (Exception e) { System.err.println("Desconectado."); }
+        } catch (Exception e) { 
+            System.err.println("Desconectado: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // --- ACTUALIZADORES VISUALES ---
@@ -324,7 +358,15 @@ public class ListaAmigosUI extends JFrame {
         if (sols.isEmpty()) JOptionPane.showMessageDialog(this, "Sin solicitudes de amistad.");
         for (String s : sols) {
             String[] p = s.split(":");
-            if (JOptionPane.showConfirmDialog(this, p[0] + " quiere ser tu amigo", "Amistad", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            int opcion = JOptionPane.showOptionDialog(this, 
+                p[0] + " quiere ser tu amigo", 
+                "Amistad", 
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new String[]{"Sí", "No"},
+                "Sí");
+            if (opcion == JOptionPane.YES_OPTION) {
                 enviar(new Peticion("ACEPTAR_SOLICITUD", Integer.parseInt(p[1])));
                 if (modoVista == 0) pedirListaAmigos();
             }
@@ -334,7 +376,15 @@ public class ListaAmigosUI extends JFrame {
     private void procesarInvitacionesGrupo(ArrayList<Grupo> grupos) {
         if (grupos.isEmpty()) JOptionPane.showMessageDialog(this, "Sin invitaciones a grupos.");
         for (Grupo g : grupos) {
-            if (JOptionPane.showConfirmDialog(this, "Invitación al grupo: " + g.getTitulo(), "Grupo", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            int opcion = JOptionPane.showOptionDialog(this,
+                "Invitación al grupo: " + g.getTitulo(),
+                "Grupo",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new String[]{"Sí", "No"},
+                "Sí");
+            if (opcion == JOptionPane.YES_OPTION) {
                 enviar(new Peticion("ACEPTAR_GRUPO", g.getId()));
                 if (modoVista == 1) pedirListaGrupos();
             }

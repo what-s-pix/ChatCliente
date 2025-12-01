@@ -53,11 +53,11 @@ public class LoginUI extends JFrame {
         
         btnLogin = new JButton("Entrar");
         btnRegistro = new JButton("Registrarse");
-        
-        
+        JButton btnRecuperar = new JButton("Recuperar Contraseña");
         
         panelBotones.add(btnLogin);
         panelBotones.add(btnRegistro);
+        panelBotones.add(btnRecuperar);
 
         // Agregamos paneles a la ventana
         add(panelFormulario, BorderLayout.CENTER);
@@ -78,6 +78,14 @@ public class LoginUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 hacerRegistro();
+            }
+        });
+        
+        // Acción del botón RECUPERAR
+        btnRecuperar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                recuperarContrasena();
             }
         });
     }
@@ -119,9 +127,22 @@ public class LoginUI extends JFrame {
                 // this.dispose(); // Cierra login
                 
             } else if (respuesta.getAccion().equals("LOGIN_BLOQUEADO")) {
-                JOptionPane.showMessageDialog(this, "CUENTA BLOQUEADA: " + respuesta.getDatos(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "CUENTA BLOQUEADA: " + respuesta.getDatos() + "\n\nSerás redirigido a recuperar tu contraseña.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                recuperarContrasena();
             } else {
-                JOptionPane.showMessageDialog(this, "Login fallido: " + respuesta.getDatos(), "Error", JOptionPane.WARNING_MESSAGE);
+                String mensajeError = respuesta.getDatos().toString();
+                JOptionPane.showMessageDialog(this, "Login fallido: " + mensajeError, "Error", JOptionPane.WARNING_MESSAGE);
+                
+                // Si tiene 3 intentos, redirigir a recuperación
+                if (mensajeError.contains("3")) {
+                    int opcion = JOptionPane.showConfirmDialog(this, 
+                        "Has alcanzado el límite de intentos.\n¿Deseas recuperar tu contraseña?", 
+                        "Límite de intentos", JOptionPane.YES_NO_OPTION);
+                    if (opcion == JOptionPane.YES_OPTION) {
+                        recuperarContrasena();
+                    }
+                }
             }
 
         } catch (Exception ex) {
@@ -166,6 +187,55 @@ public class LoginUI extends JFrame {
 
                 if (respuesta.getAccion().equals("REGISTRO_OK")) {
                     JOptionPane.showMessageDialog(this, "Registro exitoso. Ahora puedes entrar.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            }
+        }
+    }
+    
+    private void recuperarContrasena() {
+        JTextField fieldUser = new JTextField();
+        JPasswordField fieldPass = new JPasswordField();
+        JPasswordField fieldPassConfirm = new JPasswordField();
+
+        Object[] message = {
+            "Usuario:", fieldUser,
+            "Nueva Contraseña:", fieldPass,
+            "Confirmar Contraseña:", fieldPassConfirm
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Recuperar Contraseña", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String user = fieldUser.getText().trim();
+            String pass = new String(fieldPass.getPassword()).trim();
+            String passConfirm = new String(fieldPassConfirm.getPassword()).trim();
+
+            if (user.isEmpty() || pass.isEmpty() || passConfirm.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.");
+                return;
+            }
+
+            if (!pass.equals(passConfirm)) {
+                JOptionPane.showMessageDialog(this, "Las contraseñas no coinciden.");
+                return;
+            }
+
+            try {
+                Cliente.getInstance().conectar();
+                String[] datos = {user, pass};
+                Peticion p = new Peticion("RECUPERAR_CONTRASENA", datos);
+
+                Cliente.getInstance().enviar(p);
+                Peticion respuesta = Cliente.getInstance().recibir();
+
+                if (respuesta.getAccion().equals("RECUPERAR_OK")) {
+                    JOptionPane.showMessageDialog(this, "Contraseña recuperada exitosamente. Ahora puedes iniciar sesión.");
+                    txtUsername.setText(user);
+                    txtPassword.setText("");
                 } else {
                     JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
                 }
