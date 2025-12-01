@@ -53,11 +53,19 @@ public class LoginUI extends JFrame {
         
         btnLogin = new JButton("Entrar");
         btnRegistro = new JButton("Registrarse");
+<<<<<<< HEAD
         JButton btnRecuperar = new JButton("Recuperar Contraseña");
         
         panelBotones.add(btnLogin);
         panelBotones.add(btnRegistro);
         panelBotones.add(btnRecuperar);
+=======
+        
+        
+        
+        panelBotones.add(btnLogin);
+        panelBotones.add(btnRegistro);
+>>>>>>> origin/avances
 
         // Agregamos paneles a la ventana
         add(panelFormulario, BorderLayout.CENTER);
@@ -80,6 +88,7 @@ public class LoginUI extends JFrame {
                 hacerRegistro();
             }
         });
+<<<<<<< HEAD
         
         // Acción del botón RECUPERAR
         btnRecuperar.addActionListener(new ActionListener() {
@@ -88,6 +97,8 @@ public class LoginUI extends JFrame {
                 recuperarContrasena();
             }
         });
+=======
+>>>>>>> origin/avances
     }
 
     // --- MÉTODOS LÓGICOS (Aún vacíos) ---
@@ -102,6 +113,7 @@ public class LoginUI extends JFrame {
         }
 
         try {
+<<<<<<< HEAD
             // 1. Conectar (si no estaba conectado)
             Cliente.getInstance().conectar();
 
@@ -125,10 +137,32 @@ public class LoginUI extends JFrame {
                 this.dispose();
                 // new ChatUI(logueado).setVisible(true);
                 // this.dispose(); // Cierra login
+=======
+            Cliente.getInstance().conectar();
+
+            Usuario u = new Usuario(null, user, pass);
+            Peticion p = new Peticion("LOGIN", u);
+
+            Cliente.getInstance().enviar(p);
+            Peticion respuesta = Cliente.getInstance().recibir();
+
+            if (respuesta.getAccion().equals("LOGIN_OK")) {
+                Usuario logueado = (Usuario) respuesta.getDatos();
+                JOptionPane.showMessageDialog(this, "¡Bienvenido " + logueado.getNombre() + "!");
+                
+                // Abrir ventana del chat
+                chatcliente.ChatUI chatUI = new chatcliente.ChatUI(logueado);
+                chatUI.setVisible(true);
+                this.dispose();
+>>>>>>> origin/avances
                 
             } else if (respuesta.getAccion().equals("LOGIN_BLOQUEADO")) {
                 JOptionPane.showMessageDialog(this, "CUENTA BLOQUEADA: " + respuesta.getDatos() + "\n\nSerás redirigido a recuperar tu contraseña.", 
                     "Error", JOptionPane.ERROR_MESSAGE);
+<<<<<<< HEAD
+=======
+                // Redirigir automáticamente a recuperación
+>>>>>>> origin/avances
                 recuperarContrasena();
             } else {
                 String mensajeError = respuesta.getDatos().toString();
@@ -150,6 +184,7 @@ public class LoginUI extends JFrame {
             ex.printStackTrace();
         }
     }
+<<<<<<< HEAD
 
     private void hacerRegistro() {
         // Creamos un panel con 3 campos
@@ -195,6 +230,8 @@ public class LoginUI extends JFrame {
             }
         }
     }
+=======
+>>>>>>> origin/avances
     
     private void recuperarContrasena() {
         JTextField fieldUser = new JTextField();
@@ -245,5 +282,65 @@ public class LoginUI extends JFrame {
         }
     }
 
+<<<<<<< HEAD
+=======
+    private void hacerRegistro() {
+        // Panel con opción de recuperar cuenta
+        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panelCampos = new JPanel(new GridLayout(3, 2, 5, 5));
+        
+        JTextField fieldNombre = new JTextField();
+        JTextField fieldUser = new JTextField();
+        JPasswordField fieldPass = new JPasswordField();
+        
+        panelCampos.add(new JLabel("Nombre Completo:"));
+        panelCampos.add(fieldNombre);
+        panelCampos.add(new JLabel("Nuevo Usuario:"));
+        panelCampos.add(fieldUser);
+        panelCampos.add(new JLabel("Contraseña:"));
+        panelCampos.add(fieldPass);
+        
+        JButton btnRecuperar = new JButton("¿Ya tienes cuenta? Recuperar contraseña");
+        btnRecuperar.addActionListener(e -> {
+            recuperarContrasena();
+        });
+        
+        panel.add(panelCampos, BorderLayout.CENTER);
+        panel.add(btnRecuperar, BorderLayout.SOUTH);
+
+        int option = JOptionPane.showConfirmDialog(this, panel, "Crear Cuenta", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String nombre = fieldNombre.getText().trim();
+            String user = fieldUser.getText().trim();
+            String pass = new String(fieldPass.getPassword()).trim();
+
+            if (nombre.isEmpty() || user.isEmpty() || pass.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.");
+                return;
+            }
+
+            try {
+                Cliente.getInstance().conectar();
+                Usuario uNuevo = new Usuario(nombre, user, pass);
+                Peticion p = new Peticion("REGISTRO", uNuevo);
+
+                Cliente.getInstance().enviar(p);
+                Peticion respuesta = Cliente.getInstance().recibir();
+
+                if (respuesta.getAccion().equals("REGISTRO_OK")) {
+                    JOptionPane.showMessageDialog(this, "Registro exitoso. Ahora puedes entrar.");
+                    txtUsername.setText(user);
+                    txtPassword.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error: " + respuesta.getDatos());
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            }
+        }
+    }
+
+>>>>>>> origin/avances
     
 }

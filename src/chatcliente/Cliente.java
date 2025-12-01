@@ -15,7 +15,7 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "localhost"; // Cambiar por IP real si usas 2 PC
+    private String host = "localhost"; // Cambiar por IP del servidor en red local (ej: "192.168.1.100")
     private int puerto = 5000;
 
     // Constructor privado para que nadie haga "new Cliente()"
