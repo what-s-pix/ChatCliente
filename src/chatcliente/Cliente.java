@@ -15,7 +15,7 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "localhost"; // Cambiar por IP del servidor en red local (ej: "192.168.1.100")
+    private String host = "localhost"; // Se puede cambiar con setHost()
     private int puerto = 5000;
 
     // Constructor privado para que nadie haga "new Cliente()"
@@ -55,5 +55,22 @@ public class Cliente {
         try {
             if (socket != null) socket.close();
         } catch (IOException e) {}
+    }
+    
+    // 7. Setters para configurar conexión
+    public void setHost(String host) {
+        this.host = host;
+    }
+    
+    public void setPuerto(int puerto) {
+        this.puerto = puerto;
+    }
+    
+    public String getHost() {
+        return host;
+    }
+    
+    public int getPuerto() {
+        return puerto;
     }
 }

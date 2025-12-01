@@ -12,9 +12,4 @@ public class ChatCliente {
             new LoginUI().setVisible(true);
         });
     }
-    
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/avances
