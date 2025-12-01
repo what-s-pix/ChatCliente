@@ -2,6 +2,7 @@ package chatcliente;
 import common.Peticion;
 import models.Usuario;
 import models.Mensaje;
+import models.MensajeGrupo;
 import models.Grupo;
 import javax.swing.*;
 import java.awt.*;
@@ -177,8 +178,8 @@ public class ListaAmigosUI extends JFrame {
                                 case "LISTA_GRUPOS_OK":
                                     if (modoVista == 1) actualizarListaGrupos((ArrayList<Grupo>) datos);
                                     break;
-                                case "RECIBIR_MENSAJE_GRUPO":
-                                    redirigirMensajeGrupo((Mensaje) datos);
+                                case "MENSAJE_GRUPO":
+                                    redirigirMensajeGrupo((MensajeGrupo) datos);
                                     break;
                                 case "INVITACIONES_GRUPO_OK":
                                     procesarInvitacionesGrupo((ArrayList<Grupo>) datos);
@@ -256,11 +257,13 @@ public class ListaAmigosUI extends JFrame {
             chatsGrupos.get(id).toFront();
         }
     }
-    private void redirigirMensajeGrupo(Mensaje m) {
-        int idGrupo = m.getId();
+    private void redirigirMensajeGrupo(MensajeGrupo mg) {
+        int idGrupo = mg.getFk_grupo();
         if (chatsGrupos.containsKey(idGrupo) && chatsGrupos.get(idGrupo).isVisible()) {
-            chatsGrupos.get(idGrupo).mostrarMensaje(m);
+            chatsGrupos.get(idGrupo).mostrarMensajeGrupo(mg);
         }
+        // Si el chat no está abierto, el mensaje se guardará en el historial
+        // y se mostrará cuando el usuario abra el chat
     }
     private void procesarSolicitudesAmistad(ArrayList<String> sols) {
         if (sols.isEmpty()) JOptionPane.showMessageDialog(this, "Sin solicitudes de amistad.");

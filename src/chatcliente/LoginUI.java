@@ -89,9 +89,14 @@ public class LoginUI extends JFrame {
                 String mensajeError = respuesta.getDatos().toString();
                 JOptionPane.showMessageDialog(this, "Login fallido: " + mensajeError, "Error", JOptionPane.WARNING_MESSAGE);
                 if (mensajeError.contains("3")) {
-                    int opcion = JOptionPane.showConfirmDialog(this,
+                    int opcion = JOptionPane.showOptionDialog(this,
                         "Has alcanzado el límite de intentos.\n¿Deseas recuperar tu contraseña?",
-                        "Límite de intentos", JOptionPane.YES_NO_OPTION);
+                        "Límite de intentos",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        new String[]{"Sí", "No"},
+                        "Sí");
                     if (opcion == JOptionPane.YES_OPTION) {
                         recuperarContrasena();
                     }

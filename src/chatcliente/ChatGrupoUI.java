@@ -2,6 +2,7 @@ package chatcliente;
 import common.Peticion;
 import models.Grupo;
 import models.Mensaje;
+import models.MensajeGrupo;
 import models.Usuario;
 import javax.swing.*;
 import java.awt.*;
@@ -63,17 +64,24 @@ public class ChatGrupoUI extends JFrame {
             txtAreaChat.setCaretPosition(txtAreaChat.getDocument().getLength());
         });
     }
+    public void mostrarMensajeGrupo(MensajeGrupo mg) {
+        SwingUtilities.invokeLater(() -> {
+            String remitente = mg.getNombreRemitente() != null ? mg.getNombreRemitente() : "Usuario";
+            txtAreaChat.append("[" + remitente + "]: " + mg.getMensaje() + "\n");
+            txtAreaChat.setCaretPosition(txtAreaChat.getDocument().getLength());
+        });
+    }
     private void enviarMensaje() {
         String texto = txtMensaje.getText().trim();
         if (texto.isEmpty()) return;
-        Mensaje m = new Mensaje();
-        m.setFk_remitente(miUsuario.getPk_usuario());
-        m.setFk_destinatario(grupo.getPk_grupo());
-        m.setMensaje(texto);
-        m.setNombreRemitente(miUsuario.getUsername());
+        MensajeGrupo mg = new MensajeGrupo();
+        mg.setFk_grupo(grupo.getPk_grupo());
+        mg.setFk_remitente(miUsuario.getPk_usuario());
+        mg.setMensaje(texto);
+        mg.setNombreRemitente(miUsuario.getUsername());
         txtAreaChat.append("[Yo]: " + texto + "\n");
         try {
-            Cliente.getInstance().enviar(new Peticion("ENVIAR_MENSAJE_GRUPO", m));
+            Cliente.getInstance().enviar(new Peticion("ENVIAR_MENSAJE_GRUPO", mg));
             txtMensaje.setText("");
         } catch (Exception ex) {
             ex.printStackTrace();
