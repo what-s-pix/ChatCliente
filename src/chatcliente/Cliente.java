@@ -9,7 +9,7 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "localhost"; // Se puede cambiar con setHost()
+    private String host = "localhost";
     private int puerto = 5000;
     private Cliente() {}
     public static Cliente getInstance() {

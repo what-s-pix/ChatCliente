@@ -17,38 +17,6 @@ public class LoginUI extends JFrame {
         super("Acceso al Chat");
         configurarVentana();
         inicializarComponentes();
-        configurarConexion();
-    }
-    private void configurarConexion() {
-        String ipServidor = JOptionPane.showInputDialog(
-            this,
-            "Ingresa la IP o dominio del servidor:\n\n" +
-            "• Para red local: 192.168.1.100\n" +
-            "• Para internet (ngrok): 0.tcp.ngrok.io\n" +
-            "• Dejar vacío para localhost",
-            "Configuración de Conexión",
-            JOptionPane.QUESTION_MESSAGE
-        );
-        if (ipServidor != null && !ipServidor.trim().isEmpty()) {
-            Cliente.getInstance().setHost(ipServidor.trim());
-        }
-        String puertoStr = JOptionPane.showInputDialog(
-            this,
-            "Ingresa el puerto del servidor:\n\n" +
-            "• Puerto por defecto: 5000\n" +
-            "• Para ngrok: usa el puerto que te da\n" +
-            "• Dejar vacío para 5000",
-            "Puerto del Servidor",
-            JOptionPane.QUESTION_MESSAGE
-        );
-        if (puertoStr != null && !puertoStr.trim().isEmpty()) {
-            try {
-                int puerto = Integer.parseInt(puertoStr.trim());
-                Cliente.getInstance().setPuerto(puerto);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Puerto inválido, usando 5000 por defecto");
-            }
-        }
     }
     private void configurarVentana() {
         setSize(350, 200);
