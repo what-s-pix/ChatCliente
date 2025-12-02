@@ -43,11 +43,14 @@ public class procesador_peticiones {
             case "RECIBIR_MENSAJE": // Este es el que envía el servidor
             case "MENSAJE_RECIBIDO":
             case "MENSAJE_AMIGO_RECIBIDO":
-                procesarMensajeRecibido((Mensaje) p.getDatos(), false);
+                procesarMensajeRecibido((Mensaje) p.getDatos(), false, true);
+                break;
+            case "MENSAJE_USUARIO_RECIBIDO":
+                procesarMensajeRecibido((Mensaje) p.getDatos(), false, false);
                 break;
             case "MENSAJE_GRUPO": // Este es el que envía el servidor
             case "MENSAJE_GRUPO_RECIBIDO":
-                procesarMensajeRecibido((Mensaje) p.getDatos(), true);
+                procesarMensajeRecibido((Mensaje) p.getDatos(), true, false);
                 break;
             case "USUARIOS_CONECTADOS":
             case "LISTA_USUARIOS":
@@ -206,15 +209,17 @@ public class procesador_peticiones {
             }
         } catch (Exception e) {}
     }
-    private void procesarMensajeRecibido(Mensaje mensaje, boolean esGrupo) {
+    private void procesarMensajeRecibido(Mensaje mensaje, boolean esGrupo, boolean esAmigo) {
         SwingUtilities.invokeLater(() -> {
             String clave = null;
             if (esGrupo) {
                 clave = "grupo_" + mensaje.getFk_destinatario();
             } else {
                 int otroId = mensaje.getFk_remitente();
-                clave = "amigo_" + otroId;
-                if (!ventanasChatAbiertas.containsKey(clave)) {
+                // Enrutar según el tipo de chat: amigo o usuario
+                if (esAmigo) {
+                    clave = "amigo_" + otroId;
+                } else {
                     clave = "usuario_" + otroId;
                 }
             }
@@ -264,23 +269,18 @@ public class procesador_peticiones {
                         int grupoId = (Integer) identificador;
                         clave = "grupo_" + grupoId;
                     } else {
+                        // Solo buscar en chats de amigos (el historial solo se carga para amigos)
                         if (identificador instanceof String) {
                             String username = (String) identificador;
                             for (Map.Entry<Integer, Usuario> entry : mapaUsuarios.entrySet()) {
                                 if (entry.getValue().getUsername().equals(username)) {
                                     clave = "amigo_" + entry.getKey();
-                                    if (!ventanasChatAbiertas.containsKey(clave)) {
-                                        clave = "usuario_" + entry.getKey();
-                                    }
                                     break;
                                 }
                             }
                         } else if (identificador instanceof Integer) {
                             int userId = (Integer) identificador;
                             clave = "amigo_" + userId;
-                            if (!ventanasChatAbiertas.containsKey(clave)) {
-                                clave = "usuario_" + userId;
-                            }
                         }
                     }
                     if (clave != null) {

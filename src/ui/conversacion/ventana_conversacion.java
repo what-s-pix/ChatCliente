@@ -20,14 +20,16 @@ public class ventana_conversacion extends JFrame {
     private Usuario destinatario;
     private int grupoId;
     private boolean esGrupo;
+    private boolean esChatAmigo;
     private panel_mensajes mensajesPanel;
     private panel_envio envioPanel;
     private boolean activo;
-    public ventana_conversacion(Usuario usuarioActual, Usuario destinatario) {
+    public ventana_conversacion(Usuario usuarioActual, Usuario destinatario, boolean esChatAmigo) {
         super("Chat con " + destinatario.getNombre());
         this.usuarioActual = usuarioActual;
         this.destinatario = destinatario;
         this.esGrupo = false;
+        this.esChatAmigo = esChatAmigo;
         this.activo = true;
         configurarVentana();
         inicializarComponentes();
@@ -73,6 +75,10 @@ public class ventana_conversacion extends JFrame {
     }
     private void cargarHistorial() {
         if (!Cliente.getInstance().estaConectado()) {
+            return;
+        }
+        // Solo cargar historial si es chat de amigo (no para chats de usuarios)
+        if (!esGrupo && !esChatAmigo) {
             return;
         }
         try {
@@ -129,7 +135,12 @@ public class ventana_conversacion extends JFrame {
                 mensaje.setNombreDestinatario(destinatario.getUsername());
                 mensaje.setNombreRemitente(usuarioActual.getUsername());
                 datos = mensaje;
-                accion = "ENVIAR_MENSAJE";
+                // Usar diferentes acciones según si es chat de amigo o usuario
+                if (esChatAmigo) {
+                    accion = "MENSAJE_AMIGO";
+                } else {
+                    accion = "MENSAJE_USUARIO";
+                }
             }
             Peticion p = new Peticion(accion, datos);
             Cliente.getInstance().enviar(p);

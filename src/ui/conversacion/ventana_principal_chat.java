@@ -261,7 +261,7 @@ public class ventana_principal_chat extends JFrame {
         if (ventanaExistente != null) {
             ventanasChatAbiertas.remove(clave);
         }
-        ventana_conversacion ventanaChat = new ventana_conversacion(usuarioActual, destinatario);
+        ventana_conversacion ventanaChat = new ventana_conversacion(usuarioActual, destinatario, false);
         ventanaChat.setVisible(true);
         ventanasChatAbiertas.put(clave, ventanaChat);
     }
@@ -285,7 +285,7 @@ public class ventana_principal_chat extends JFrame {
                 "Error", JOptionPane.PLAIN_MESSAGE);
             return;
         }
-        ventana_conversacion ventanaChat = new ventana_conversacion(usuarioActual, amigo);
+        ventana_conversacion ventanaChat = new ventana_conversacion(usuarioActual, amigo, true);
         ventanaChat.setVisible(true);
         ventanasChatAbiertas.put(clave, ventanaChat);
     }
