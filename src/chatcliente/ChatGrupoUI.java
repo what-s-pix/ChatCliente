@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.ArrayList;
 public class ChatGrupoUI extends JFrame {
     private Usuario miUsuario;
-    private Grupo grupo;
+    private Grupo grupo; // Guardamos el objeto Grupo completo
     private JTextArea txtAreaChat;
     private JTextField txtMensaje;
     private JButton btnEnviar;
@@ -19,7 +19,7 @@ public class ChatGrupoUI extends JFrame {
         this.grupo = grupo;
         configurarVentana();
         inicializarComponentes();
-        pedirHistorial();
+        pedirHistorial(); // Pedir historial al abrir
     }
     private void configurarVentana() {
         setSize(450, 550);
@@ -33,7 +33,7 @@ public class ChatGrupoUI extends JFrame {
         txtAreaChat.setLineWrap(true);
         txtAreaChat.setWrapStyleWord(true);
         txtAreaChat.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        txtAreaChat.setBackground(new Color(240, 248, 255));
+        txtAreaChat.setBackground(new Color(240, 248, 255)); // Un colorcito azul leve para diferenciar de chat privado
         add(new JScrollPane(txtAreaChat), BorderLayout.CENTER);
         JPanel panelSur = new JPanel(new BorderLayout(5, 5));
         panelSur.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -47,8 +47,8 @@ public class ChatGrupoUI extends JFrame {
     }
     private void pedirHistorial() {
         try {
-            Cliente.getInstance().enviar(new Peticion("PEDIR_HISTORIAL_GRUPO", grupo.getId()));
-        } catch (Exception e) { e.printStackTrace(); }
+            Cliente.getInstance().enviar(new Peticion("PEDIR_HISTORIAL_GRUPO", grupo.getId())); // Enviamos el ID del grupo para pedir historial
+        } catch (Exception e) { }
     }
     public void cargarHistorial(ArrayList<Mensaje> historial) {
         SwingUtilities.invokeLater(() -> {
@@ -64,7 +64,7 @@ public class ChatGrupoUI extends JFrame {
             txtAreaChat.setCaretPosition(txtAreaChat.getDocument().getLength());
         });
     }
-    public void mostrarMensajeGrupo(MensajeGrupo mg) {
+    public void mostrarMensajeGrupo(models.MensajeGrupo mg) {
         SwingUtilities.invokeLater(() -> {
             String remitente = mg.getNombreRemitente() != null ? mg.getNombreRemitente() : "Usuario";
             txtAreaChat.append("[" + remitente + "]: " + mg.getMensaje() + "\n");
@@ -74,17 +74,13 @@ public class ChatGrupoUI extends JFrame {
     private void enviarMensaje() {
         String texto = txtMensaje.getText().trim();
         if (texto.isEmpty()) return;
-        MensajeGrupo mg = new MensajeGrupo();
-        mg.setFk_grupo(grupo.getPk_grupo());
-        mg.setFk_remitente(miUsuario.getPk_usuario());
-        mg.setMensaje(texto);
-        mg.setNombreRemitente(miUsuario.getUsername());
-        txtAreaChat.append("[Yo]: " + texto + "\n");
+        Mensaje m = new Mensaje(miUsuario.getUsername(), "GRUPO", texto); // Crear mensaje: El destinatario visual es "GRUPO", pero lo importante es el ID
+        m.setId(grupo.getId()); // ¡TRUCO! Usamos el ID del mensaje para guardar el ID del grupo
+        txtAreaChat.append("[Yo]: " + texto + "\n"); // Feedback local
         try {
-            Cliente.getInstance().enviar(new Peticion("ENVIAR_MENSAJE_GRUPO", mg));
+            Cliente.getInstance().enviar(new Peticion("ENVIAR_MENSAJE_GRUPO", m));
             txtMensaje.setText("");
         } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 }

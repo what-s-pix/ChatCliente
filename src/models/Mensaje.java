@@ -39,22 +39,10 @@ public class Mensaje implements Serializable {
     public void setLeido(boolean leido) { this.leido = leido; }
     public String getNombreRemitente() { return nombreRemitente; }
     public void setNombreRemitente(String nombreRemitente) { this.nombreRemitente = nombreRemitente; }
-    public String getRemitente() {
-        return nombreRemitente != null ? nombreRemitente : String.valueOf(fk_remitente);
-    }
-    public String getContenido() {
-        return mensaje;
-    }
-    public int getId() {
-        return pk_mensaje;
-    }
-    public void setId(int id) {
-        this.pk_mensaje = id;
-    }
-    public String getNombreDestinatario() {
-        return nombreDestinatario;
-    }
-    public void setNombreDestinatario(String nombreDestinatario) {
-        this.nombreDestinatario = nombreDestinatario;
-    }
+    public String getRemitente() { return nombreRemitente != null ? nombreRemitente : String.valueOf(fk_remitente); }
+    public String getContenido() { return mensaje; }
+    public int getId() { return pk_mensaje; }
+    public void setId(int id) { this.pk_mensaje = id; }
+    public String getNombreDestinatario() { return nombreDestinatario; }
+    public void setNombreDestinatario(String nombreDestinatario) { this.nombreDestinatario = nombreDestinatario; }
 }

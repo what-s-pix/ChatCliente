@@ -125,10 +125,11 @@ public class ListaAmigosUI extends JFrame {
         }
     }
     private void enviar(Peticion p) {
-        try { Cliente.getInstance().enviar(p); } catch (Exception e) { e.printStackTrace(); }
+        try { Cliente.getInstance().enviar(p); } catch (Exception e) { }
     }
     private void pedirListaAmigos() { enviar(new Peticion("LISTAR_AMIGOS", null)); }
     private void pedirListaGrupos() { enviar(new Peticion("LISTAR_MIS_GRUPOS", null)); }
+    @SuppressWarnings("unchecked")
     private void escucharServidor() {
         try {
             while (escuchando) {
@@ -200,20 +201,15 @@ public class ListaAmigosUI extends JFrame {
                                     }
                             }
                         } catch (Exception ex) {
-                            System.err.println("Error procesando petición: " + ex.getMessage());
-                            ex.printStackTrace();
                         }
                     });
                 } catch (java.io.EOFException e) {
                     break;
                 } catch (java.io.StreamCorruptedException e) {
-                    System.err.println("Error de serialización, ignorando paquete: " + e.getMessage());
                     continue;
                 }
             }
         } catch (Exception e) {
-            System.err.println("Desconectado: " + e.getMessage());
-            e.printStackTrace();
         }
     }
     private void actualizarListaAmigos(ArrayList<Usuario> lista) {
@@ -262,9 +258,8 @@ public class ListaAmigosUI extends JFrame {
         if (chatsGrupos.containsKey(idGrupo) && chatsGrupos.get(idGrupo).isVisible()) {
             chatsGrupos.get(idGrupo).mostrarMensajeGrupo(mg);
         }
-        // Si el chat no está abierto, el mensaje se guardará en el historial
-        // y se mostrará cuando el usuario abra el chat
     }
+    @SuppressWarnings("unchecked")
     private void procesarSolicitudesAmistad(ArrayList<String> sols) {
         if (sols.isEmpty()) JOptionPane.showMessageDialog(this, "Sin solicitudes de amistad.");
         for (String s : sols) {
@@ -283,6 +278,7 @@ public class ListaAmigosUI extends JFrame {
             }
         }
     }
+    @SuppressWarnings("unchecked")
     private void procesarInvitacionesGrupo(ArrayList<Grupo> grupos) {
         if (grupos.isEmpty()) JOptionPane.showMessageDialog(this, "Sin invitaciones a grupos.");
         for (Grupo g : grupos) {

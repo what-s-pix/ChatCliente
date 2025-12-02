@@ -48,7 +48,6 @@ public class CrearGrupoUI extends JFrame {
             Cliente.getInstance().enviar(new Peticion("CREAR_GRUPO", payload));
             this.dispose();
         } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 }

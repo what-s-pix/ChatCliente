@@ -11,6 +11,11 @@ public class Amistad implements Serializable {
     private Timestamp fecha_aceptacion;
     private String nombreUsuario;
     public Amistad() {}
+    public Amistad(int fk_usuario1, int fk_usuario2) {
+        this.fk_usuario1 = fk_usuario1;
+        this.fk_usuario2 = fk_usuario2;
+        this.estado = "pendiente";
+    }
     public int getPk_amistad() { return pk_amistad; }
     public void setPk_amistad(int pk_amistad) { this.pk_amistad = pk_amistad; }
     public int getFk_usuario1() { return fk_usuario1; }
