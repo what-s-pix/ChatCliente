@@ -9,8 +9,8 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "localhost";
-    private int puerto = 5000;
+    private String host = "6.tcp.us-cal-1.ngrok.io:10425";
+    private int puerto = 12315;
     private Cliente() {}
     public static Cliente getInstance() {
         if (instance == null) {
@@ -31,6 +31,9 @@ public class Cliente {
     }
     public Peticion recibir() throws IOException, ClassNotFoundException {
         return (Peticion) entrada.readObject();
+    }
+    public boolean estaConectado() {
+        return socket != null && !socket.isClosed() && salida != null && entrada != null;
     }
     public void cerrar() {
         try {

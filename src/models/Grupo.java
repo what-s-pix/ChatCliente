@@ -36,4 +36,10 @@ public class Grupo implements Serializable {
     public List<Usuario> getMiembros() { return miembros; }
     public void setMiembros(List<Usuario> miembros) { this.miembros = miembros; }
     public int getId() { return pk_grupo; }
+    
+    private List<Integer> invitaciones_pendientes;
+    public List<Integer> getInvitaciones_pendientes() { return invitaciones_pendientes; }
+    public void setInvitaciones_pendientes(List<Integer> invitaciones_pendientes) { 
+        this.invitaciones_pendientes = invitaciones_pendientes; 
+    }
 }

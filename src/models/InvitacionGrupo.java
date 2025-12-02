@@ -12,7 +12,16 @@ public class InvitacionGrupo implements Serializable {
     private Timestamp fecha_respuesta;
     private String tituloGrupo;
     private String nombreInvitador;
+    
     public InvitacionGrupo() {}
+    
+    public InvitacionGrupo(int fk_grupo, int fk_invitado, int fk_invitador) {
+        this.fk_grupo = fk_grupo;
+        this.fk_invitado = fk_invitado;
+        this.fk_invitador = fk_invitador;
+        this.estado = "pendiente";
+    }
+    
     public int getPk_invitacion() { return pk_invitacion; }
     public void setPk_invitacion(int pk_invitacion) { this.pk_invitacion = pk_invitacion; }
     public int getFk_grupo() { return fk_grupo; }
@@ -31,4 +40,9 @@ public class InvitacionGrupo implements Serializable {
     public void setTituloGrupo(String tituloGrupo) { this.tituloGrupo = tituloGrupo; }
     public String getNombreInvitador() { return nombreInvitador; }
     public void setNombreInvitador(String nombreInvitador) { this.nombreInvitador = nombreInvitador; }
+    
+    public String getTitulo_grupo() { return tituloGrupo; }
+    public String getNombre_invitador() { return nombreInvitador; }
+    public int getFk_usuario_invitado() { return fk_invitado; }
+    public int getFk_usuario_invitador() { return fk_invitador; }
 }
