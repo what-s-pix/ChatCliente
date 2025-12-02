@@ -102,38 +102,55 @@ public class ventana_recuperar_contrasena extends JDialog {
             return;
         }
         
+        // Deshabilitar botones mientras se procesa
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        
         // Ejecutar en un hilo separado para no bloquear la UI
         new Thread(() -> {
             try {
                 System.out.println("[RECUPERAR] Conectando al servidor...");
+                
+                // Cerrar conexión anterior si existe
+                Cliente.getInstance().cerrar();
+                
+                // Crear nueva conexión
                 Cliente.getInstance().conectar();
                 
-                Peticion p = new Peticion("RECUPERAR_CONTRASENA", 
-                    new Object[] {username, nuevaPass});
+                // Enviar la petición con formato correcto (String[])
+                String[] datosRecuperacion = new String[] {username, nuevaPass};
+                Peticion p = new Peticion("RECUPERAR_CONTRASENA", datosRecuperacion);
                 
                 System.out.println("[RECUPERAR] Enviando petición...");
                 Cliente.getInstance().enviar(p);
+                
                 System.out.println("[RECUPERAR] Esperando respuesta...");
                 Peticion respuesta = Cliente.getInstance().recibir();
                 System.out.println("[RECUPERAR] Respuesta recibida: " + respuesta.getAccion());
                 
+                // Cerrar la conexión temporal
+                Cliente.getInstance().cerrar();
+                
                 // Actualizar UI en el hilo de Swing
                 SwingUtilities.invokeLater(() -> {
+                    setCursor(Cursor.getDefaultCursor());
                     if (respuesta.getAccion().equals("RECUPERAR_OK")) {
                         JOptionPane.showMessageDialog(this, 
-                            "contrasena recuperada exitosamente.");
+                            "Contraseña recuperada exitosamente.\nYa puedes iniciar sesión con tu nueva contraseña.");
                         exito = true;
                         dispose();
                     } else {
                         JOptionPane.showMessageDialog(this, 
-                            "error: " + respuesta.getDatos(), 
-                            "error", 
+                            "Error: " + respuesta.getDatos(), 
+                            "Error", 
                             JOptionPane.ERROR_MESSAGE);
                     }
                 });
             } catch (java.net.ConnectException e) {
+                // Cerrar la conexión si falló
+                Cliente.getInstance().cerrar();
                 final String mensajeError = e.getMessage() != null ? e.getMessage() : "No se pudo conectar";
                 SwingUtilities.invokeLater(() -> {
+                    setCursor(Cursor.getDefaultCursor());
                     JOptionPane.showMessageDialog(this, 
                         "No se pudo conectar al servidor.\n" +
                         "Verifica que el servidor esté corriendo.\n\n" +
@@ -142,6 +159,8 @@ public class ventana_recuperar_contrasena extends JDialog {
                         JOptionPane.ERROR_MESSAGE);
                 });
             } catch (Exception ex) {
+                // Cerrar la conexión si falló
+                Cliente.getInstance().cerrar();
                 final String tipoExcepcion = ex.getClass().getSimpleName();
                 String mensajeTemp = ex.getMessage();
                 if (mensajeTemp == null || mensajeTemp.isEmpty()) {
@@ -154,6 +173,7 @@ public class ventana_recuperar_contrasena extends JDialog {
                 System.err.println("[RECUPERAR] Error: " + tipoExcepcion + " - " + mensajeError);
                 ex.printStackTrace();
                 SwingUtilities.invokeLater(() -> {
+                    setCursor(Cursor.getDefaultCursor());
                     JOptionPane.showMessageDialog(this, 
                         "Error de conexión: " + mensajeError + "\n\n" +
                         "Tipo: " + tipoExcepcion + "\n\n" +

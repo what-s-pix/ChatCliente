@@ -129,5 +129,31 @@ public class panel_invitaciones extends JPanel {
     public JButton getBtnRechazarGrupo() {
         return btnRechazarGrupo;
     }
+    
+    // Método para procesar lista de strings del servidor "username:pk_amistad"
+    public void actualizarSolicitudesTexto(List<String> solicitudes) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            modeloInvitacionesAmigos.clear();
+            for (String solicitud : solicitudes) {
+                String[] partes = solicitud.split(":");
+                if (partes.length >= 2) {
+                    String username = partes[0];
+                    String pkAmistad = partes[1];
+                    modeloInvitacionesAmigos.addElement(pkAmistad + " - " + username);
+                }
+            }
+        });
+    }
+    
+    // Método para procesar lista de grupos (invitaciones)
+    public void actualizarGruposInvitados(List<models.Grupo> grupos) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            modeloInvitacionesGrupos.clear();
+            for (models.Grupo grupo : grupos) {
+                modeloInvitacionesGrupos.addElement(
+                    grupo.getPk_grupo() + " - " + grupo.getTitulo());
+            }
+        });
+    }
 }
 

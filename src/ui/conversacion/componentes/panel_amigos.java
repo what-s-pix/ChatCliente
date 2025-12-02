@@ -89,5 +89,26 @@ public class panel_amigos extends JPanel {
     public void addMouseListener(java.awt.event.MouseListener listener) {
         listaAmigos.addMouseListener(listener);
     }
+    
+    // Método para procesar lista de Amistad directamente del servidor
+    public void actualizarAmistades(List<models.Amistad> amistades) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            modeloAmigos.clear();
+            mapaAmigos.clear();
+            
+            for (models.Amistad amistad : amistades) {
+                if ("aceptada".equals(amistad.getEstado())) {
+                    int otroUsuarioId = amistad.getFk_usuario1() == usuarioActualId ? 
+                        amistad.getFk_usuario2() : amistad.getFk_usuario1();
+                    
+                    String nombre = amistad.getNombreAmigo() != null ? 
+                        amistad.getNombreAmigo() : "Usuario " + otroUsuarioId;
+                    String display = "[ ] " + nombre;
+                    modeloAmigos.addElement(display);
+                    mapaAmigos.put(display, otroUsuarioId);
+                }
+            }
+        });
+    }
 }
 

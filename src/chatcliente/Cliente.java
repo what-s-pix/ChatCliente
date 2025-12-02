@@ -9,8 +9,8 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "4.tcp.ngrok.io";
-    private int puerto = 10028; 
+    private String host = "localhost";
+    private int puerto = 5000; 
     private Cliente() {}
     public static Cliente getInstance() {
         if (instance == null) {

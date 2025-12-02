@@ -85,9 +85,13 @@ public class ventana_principal_chat extends JFrame {
         tabbedPane.addTab("Grupos", gruposPanel);
         panelListas.add(tabbedPane, BorderLayout.CENTER);
         
-        JPanel panelBotones = new JPanel(new FlowLayout());
+        JPanel panelBotones = new JPanel(new GridLayout(2, 2, 5, 5));
+        JButton btnSolicitud = new JButton("+ Solicitud Amistad");
         JButton btnAmigos = new JButton("Gestión Amigos");
         JButton btnGrupos = new JButton("Gestión Grupos");
+        JButton btnActualizar = new JButton("Actualizar");
+        
+        btnSolicitud.addActionListener(e -> enviarSolicitudAmistad());
         btnAmigos.addActionListener(e -> {
             new ventana_gestion_amigos(this, usuarioActual.getPk_usuario()).setVisible(true);
             solicitarDatosIniciales();
@@ -96,6 +100,10 @@ public class ventana_principal_chat extends JFrame {
             new ventana_gestion_grupos(this, usuarioActual.getPk_usuario()).setVisible(true);
             solicitarDatosIniciales();
         });
+        btnActualizar.addActionListener(e -> solicitarDatosIniciales());
+        
+        panelBotones.add(btnSolicitud);
+        panelBotones.add(btnActualizar);
         panelBotones.add(btnAmigos);
         panelBotones.add(btnGrupos);
         panelListas.add(panelBotones, BorderLayout.SOUTH);
@@ -112,12 +120,12 @@ public class ventana_principal_chat extends JFrame {
     }
     
     private void configurarListeners() {
+        // Clic simple para seleccionar
         usuariosPanel.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && usuariosPanel.tieneSeleccion()) {
-                abrirChatUsuario();
-            }
+            // No abrir chat automáticamente en selección simple
         });
         
+        // Doble clic para abrir chat
         usuariosPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -125,12 +133,36 @@ public class ventana_principal_chat extends JFrame {
                     abrirChatUsuario();
                 }
             }
+            
+            @Override
+            public void mousePressed(MouseEvent e) {
+                mostrarMenuContextual(e);
+            }
+            
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                mostrarMenuContextual(e);
+            }
+            
+            private void mostrarMenuContextual(MouseEvent e) {
+                if (e.isPopupTrigger() && usuariosPanel.tieneSeleccion()) {
+                    JPopupMenu menu = new JPopupMenu();
+                    
+                    JMenuItem itemChat = new JMenuItem("Abrir Chat");
+                    itemChat.addActionListener(ev -> abrirChatUsuario());
+                    
+                    JMenuItem itemSolicitud = new JMenuItem("Enviar Solicitud de Amistad");
+                    itemSolicitud.addActionListener(ev -> enviarSolicitudAmistad());
+                    
+                    menu.add(itemChat);
+                    menu.add(itemSolicitud);
+                    menu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
         });
         
         amigosPanel.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && amigosPanel.tieneSeleccion()) {
-                abrirChatAmigo();
-            }
+            // No abrir chat automáticamente
         });
         
         amigosPanel.addMouseListener(new MouseAdapter() {
@@ -143,9 +175,7 @@ public class ventana_principal_chat extends JFrame {
         });
         
         gruposPanel.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && gruposPanel.tieneSeleccion()) {
-                abrirChatGrupo();
-            }
+            // No abrir chat automáticamente
         });
         
         gruposPanel.addMouseListener(new MouseAdapter() {
@@ -156,6 +186,31 @@ public class ventana_principal_chat extends JFrame {
                 }
             }
         });
+    }
+    
+    private void enviarSolicitudAmistad() {
+        if (!usuariosPanel.tieneSeleccion()) {
+            JOptionPane.showMessageDialog(this, "Selecciona un usuario primero");
+            return;
+        }
+        
+        int usuarioId = usuariosPanel.getSeleccionId();
+        String nombreUsuario = usuariosPanel.getSeleccion();
+        
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "¿Enviar solicitud de amistad a " + nombreUsuario + "?",
+            "Confirmar Solicitud",
+            JOptionPane.YES_NO_OPTION);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Peticion p = new Peticion("ENVIAR_SOLICITUD_AMISTAD", usuarioId);
+                Cliente.getInstance().enviar(p);
+                JOptionPane.showMessageDialog(this, "Solicitud enviada!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error enviando solicitud: " + ex.getMessage());
+            }
+        }
     }
     
     private void configurarBotonesInvitaciones() {
@@ -295,23 +350,25 @@ public class ventana_principal_chat extends JFrame {
         }
         try {
             System.out.println("[VENTANA_PRINCIPAL] Solicitando datos iniciales...");
+            
             // Solicitar TODOS los usuarios (conectados y desconectados)
-            Peticion p1 = new Peticion("OBTENER_USUARIOS", null);
-            System.out.println("[VENTANA_PRINCIPAL] Enviando petición OBTENER_USUARIOS...");
-            Cliente.getInstance().enviar(p1);
+            Cliente.getInstance().enviar(new Peticion("OBTENER_USUARIOS", null));
             
-            Peticion p2 = new Peticion("OBTENER_AMIGOS", usuarioActual.getPk_usuario());
-            Cliente.getInstance().enviar(p2);
+            // Solicitar amigos
+            Cliente.getInstance().enviar(new Peticion("OBTENER_AMIGOS", usuarioActual.getPk_usuario()));
             
-            Peticion p3 = new Peticion("OBTENER_GRUPOS", usuarioActual.getPk_usuario());
-            Cliente.getInstance().enviar(p3);
+            // Solicitar grupos
+            Cliente.getInstance().enviar(new Peticion("OBTENER_GRUPOS", usuarioActual.getPk_usuario()));
             
-            Peticion p4 = new Peticion("OBTENER_INVITACIONES", usuarioActual.getPk_usuario());
-            Cliente.getInstance().enviar(p4);
+            // Solicitar solicitudes de amistad pendientes
+            Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
             
-            Peticion p5 = new Peticion("OBTENER_INVITACIONES_GRUPO", usuarioActual.getPk_usuario());
-            Cliente.getInstance().enviar(p5);
+            // Solicitar invitaciones a grupos
+            Cliente.getInstance().enviar(new Peticion("OBTENER_INVITACIONES_GRUPO", usuarioActual.getPk_usuario()));
+            
+            System.out.println("[VENTANA_PRINCIPAL] Todas las peticiones enviadas");
         } catch (Exception ex) {
+            System.err.println("[VENTANA_PRINCIPAL] Error solicitando datos: " + ex.getMessage());
         }
     }
     

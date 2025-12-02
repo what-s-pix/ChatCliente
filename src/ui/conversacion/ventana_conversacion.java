@@ -3,6 +3,7 @@ package ui.conversacion;
 import chatcliente.Cliente;
 import common.Peticion;
 import models.Mensaje;
+import models.MensajeGrupo;
 import models.Usuario;
 import ui.conversacion.componentes.panel_envio;
 import ui.conversacion.componentes.panel_mensajes;
@@ -24,7 +25,6 @@ public class ventana_conversacion extends JFrame {
     private boolean esGrupo;
     private panel_mensajes mensajesPanel;
     private panel_envio envioPanel;
-    private receptor_mensajes receptor;
     private boolean activo;
     
     public ventana_conversacion(Usuario usuarioActual, Usuario destinatario) {
@@ -36,7 +36,7 @@ public class ventana_conversacion extends JFrame {
         
         configurarVentana();
         inicializarComponentes();
-        iniciarReceptorMensajes();
+        // NO iniciar receptor aquí - el receptor principal está en ventana_principal_chat
         cargarHistorial();
     }
     
@@ -49,7 +49,7 @@ public class ventana_conversacion extends JFrame {
         
         configurarVentana();
         inicializarComponentes();
-        iniciarReceptorMensajes();
+        // NO iniciar receptor aquí - el receptor principal está en ventana_principal_chat
         cargarHistorial();
     }
     
@@ -63,9 +63,6 @@ public class ventana_conversacion extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 activo = false;
-                if (receptor != null) {
-                    receptor.detener();
-                }
             }
         });
     }
@@ -97,32 +94,27 @@ public class ventana_conversacion extends JFrame {
     
     private void cargarHistorial() {
         if (!Cliente.getInstance().estaConectado()) {
+            System.out.println("[VENTANA_CONVERSACION] No conectado, no se puede cargar historial");
             return;
         }
         try {
+            // Solo enviar la petición - la respuesta será manejada por el procesador principal
+            // El historial se mostrará cuando llegue la respuesta HISTORIAL_OK
             Peticion p;
             if (esGrupo) {
-                p = new Peticion("OBTENER_HISTORIAL_GRUPO", 
-                    new Object[] {usuarioActual.getPk_usuario(), grupoId});
+                p = new Peticion("OBTENER_HISTORIAL_GRUPO", grupoId);
+                System.out.println("[VENTANA_CONVERSACION] Solicitando historial de grupo: " + grupoId);
             } else {
-                p = new Peticion("OBTENER_HISTORIAL", 
-                    new Object[] {usuarioActual.getPk_usuario(), destinatario.getPk_usuario()});
+                p = new Peticion("OBTENER_HISTORIAL", destinatario.getPk_usuario());
+                System.out.println("[VENTANA_CONVERSACION] Solicitando historial con usuario: " + destinatario.getUsername());
             }
-            
             Cliente.getInstance().enviar(p);
-            Peticion respuesta = Cliente.getInstance().recibir();
-            
-            if (respuesta.getAccion().equals("HISTORIAL_OBTENIDO") || 
-                respuesta.getAccion().equals("HISTORIAL_GRUPO_OBTENIDO")) {
-                @SuppressWarnings("unchecked")
-                List<Mensaje> mensajes = (List<Mensaje>) respuesta.getDatos();
-                mostrarHistorial(mensajes);
-            }
         } catch (Exception ex) {
+            System.err.println("[VENTANA_CONVERSACION] Error solicitando historial: " + ex.getMessage());
         }
     }
     
-    private void mostrarHistorial(List<Mensaje> mensajes) {
+    public void mostrarHistorial(List<Mensaje> mensajes) {
         for (Mensaje msg : mensajes) {
             String nombreRemitente = msg.getFk_remitente() == usuarioActual.getPk_usuario() ? 
                 usuarioActual.getNombre() : 
@@ -151,30 +143,39 @@ public class ventana_conversacion extends JFrame {
         envioPanel.focus();
         
         if (!Cliente.getInstance().estaConectado()) {
+            System.err.println("[VENTANA_CONVERSACION] No hay conexión para enviar mensaje");
             return;
         }
         
         try {
-            Mensaje mensaje;
+            String accion;
+            Object datos;
+            
             if (esGrupo) {
-                mensaje = new Mensaje(usuarioActual.getPk_usuario(), grupoId, texto);
+                // Para grupos, usar MensajeGrupo
+                MensajeGrupo mensajeGrupo = new MensajeGrupo();
+                mensajeGrupo.setFk_grupo(grupoId);
+                mensajeGrupo.setFk_remitente(usuarioActual.getPk_usuario());
+                mensajeGrupo.setMensaje(texto);
+                mensajeGrupo.setNombreRemitente(usuarioActual.getUsername());
+                datos = mensajeGrupo;
+                accion = "ENVIAR_MENSAJE_GRUPO";
             } else {
-                mensaje = new Mensaje(usuarioActual.getPk_usuario(), 
+                // Para mensajes privados, usar Mensaje
+                Mensaje mensaje = new Mensaje(usuarioActual.getPk_usuario(), 
                     destinatario.getPk_usuario(), texto);
+                mensaje.setNombreDestinatario(destinatario.getUsername());
+                mensaje.setNombreRemitente(usuarioActual.getUsername());
+                datos = mensaje;
+                accion = "ENVIAR_MENSAJE";
             }
             
-            String accion = esGrupo ? "MENSAJE_GRUPO" : "MENSAJE_AMIGO";
-            Peticion p = new Peticion(accion, mensaje);
+            System.out.println("[VENTANA_CONVERSACION] Enviando mensaje con acción: " + accion);
+            Peticion p = new Peticion(accion, datos);
             Cliente.getInstance().enviar(p);
             
         } catch (IOException ex) {
-        }
-    }
-    
-    private void iniciarReceptorMensajes() {
-        if (Cliente.getInstance().estaConectado()) {
-            receptor = new receptor_mensajes(null, null);
-            receptor.start();
+            System.err.println("[VENTANA_CONVERSACION] Error enviando mensaje: " + ex.getMessage());
         }
     }
     

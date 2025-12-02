@@ -30,4 +30,8 @@ public class Amistad implements Serializable {
     public void setFecha_aceptacion(Timestamp fecha_aceptacion) { this.fecha_aceptacion = fecha_aceptacion; }
     public String getNombreUsuario() { return nombreUsuario; }
     public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
+    
+    // Alias para compatibilidad con panel_amigos
+    public String getNombreAmigo() { return nombreUsuario; }
+    public void setNombreAmigo(String nombre) { this.nombreUsuario = nombre; }
 }
