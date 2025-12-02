@@ -24,7 +24,7 @@ public class manejador_registro {
         panel.add(new JLabel(""));
         panel.add(btnRecuperar);
         int option = JOptionPane.showConfirmDialog(
-            parent, panel, "crear cuenta",
+            parent, panel, "crear cuenta", 
             JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.PLAIN_MESSAGE);
         if (option == JOptionPane.OK_OPTION) {
@@ -32,7 +32,7 @@ public class manejador_registro {
             String user = fieldUser.getText().trim();
             String pass = new String(fieldPass.getPassword()).trim();
             if (nombre.isEmpty() || user.isEmpty() || pass.isEmpty()) {
-                JOptionPane.showMessageDialog(parent,
+                JOptionPane.showMessageDialog(parent, 
                     "todos los campos son obligatorios.",
                     "Información", JOptionPane.PLAIN_MESSAGE);
                 return;
@@ -44,16 +44,16 @@ public class manejador_registro {
                 Cliente.getInstance().enviar(p);
                 Peticion respuesta = Cliente.getInstance().recibir();
                 if (respuesta.getAccion().equals("REGISTRO_OK")) {
-                    JOptionPane.showMessageDialog(parent,
+                    JOptionPane.showMessageDialog(parent, 
                         "registro exitoso. ahora puedes entrar.",
                         "Información", JOptionPane.PLAIN_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(parent,
+                    JOptionPane.showMessageDialog(parent, 
                         "error: " + respuesta.getDatos(),
                         "Error", JOptionPane.PLAIN_MESSAGE);
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(parent,
+                JOptionPane.showMessageDialog(parent, 
                     "error: " + ex.getMessage(),
                     "Error", JOptionPane.PLAIN_MESSAGE);
             }
