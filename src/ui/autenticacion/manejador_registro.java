@@ -2,7 +2,6 @@ package ui.autenticacion;
 import chatcliente.Cliente;
 import common.Peticion;
 import models.Usuario;
-import ui.recuperar_contrasena.ventana_recuperar_contrasena;
 import javax.swing.*;
 public class manejador_registro {
     public void hacerRegistro(JFrame parent) {
@@ -16,13 +15,7 @@ public class manejador_registro {
         panel.add(fieldUser);
         panel.add(new JLabel("contrasena:"));
         panel.add(fieldPass);
-        JButton btnRecuperar = new JButton("recuperar cuenta");
-        btnRecuperar.addActionListener(e -> {
-            ventana_recuperar_contrasena recuperar = new ventana_recuperar_contrasena(parent);
-            recuperar.setVisible(true);
-        });
-        panel.add(new JLabel(""));
-        panel.add(btnRecuperar);
+      
         int option = JOptionPane.showConfirmDialog(
             parent, panel, "crear cuenta", 
             JOptionPane.OK_CANCEL_OPTION,
