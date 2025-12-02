@@ -9,8 +9,8 @@ public class Cliente {
     private Socket socket;
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
-    private String host = "6.tcp.us-cal-1.ngrok.io:10425";
-    private int puerto = 12315;
+    private String host = "6.tcp.us-cal-1.ngrok.io";
+    private int puerto = 10425;
     private Cliente() {}
     public static Cliente getInstance() {
         if (instance == null) {
@@ -20,7 +20,8 @@ public class Cliente {
     }
     public void conectar() throws IOException {
         if (socket == null || socket.isClosed()) {
-            socket = new Socket(host, puerto);
+            socket = new Socket();
+            socket.connect(new java.net.InetSocketAddress(host, puerto), 5000); // Timeout de 5 segundos
             salida = new ObjectOutputStream(socket.getOutputStream());
             entrada = new ObjectInputStream(socket.getInputStream());
         }
