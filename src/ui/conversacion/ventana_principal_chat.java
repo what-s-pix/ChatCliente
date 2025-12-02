@@ -184,28 +184,60 @@ public class ventana_principal_chat extends JFrame {
     }
     private void configurarBotonesInvitaciones() {
         invitacionesPanel.getBtnAceptarAmigo().addActionListener(e -> {
-            int invitacionId = invitacionesPanel.getSeleccionAmigoId();
-            if (invitacionId != -1) {
-                responderInvitacionAmigo(invitacionId, true);
+            if (!invitacionesPanel.tieneSeleccionAmigo()) {
+                JOptionPane.showMessageDialog(this, "Por favor selecciona una invitación primero.",
+                    "Información", JOptionPane.PLAIN_MESSAGE);
+                return;
             }
+            int invitacionId = invitacionesPanel.getSeleccionAmigoId();
+            if (invitacionId == -1) {
+                JOptionPane.showMessageDialog(this, "Error al obtener el ID de la invitación.",
+                    "Error", JOptionPane.PLAIN_MESSAGE);
+                return;
+            }
+            responderInvitacionAmigo(invitacionId, true);
         });
         invitacionesPanel.getBtnRechazarAmigo().addActionListener(e -> {
-            int invitacionId = invitacionesPanel.getSeleccionAmigoId();
-            if (invitacionId != -1) {
-                responderInvitacionAmigo(invitacionId, false);
+            if (!invitacionesPanel.tieneSeleccionAmigo()) {
+                JOptionPane.showMessageDialog(this, "Por favor selecciona una invitación primero.",
+                    "Información", JOptionPane.PLAIN_MESSAGE);
+                return;
             }
+            int invitacionId = invitacionesPanel.getSeleccionAmigoId();
+            if (invitacionId == -1) {
+                JOptionPane.showMessageDialog(this, "Error al obtener el ID de la invitación.",
+                    "Error", JOptionPane.PLAIN_MESSAGE);
+                return;
+            }
+            responderInvitacionAmigo(invitacionId, false);
         });
         invitacionesPanel.getBtnAceptarGrupo().addActionListener(e -> {
-            int invitacionId = invitacionesPanel.getSeleccionGrupoId();
-            if (invitacionId != -1) {
-                responderInvitacionGrupo(invitacionId, true);
+            if (!invitacionesPanel.tieneSeleccionGrupo()) {
+                JOptionPane.showMessageDialog(this, "Por favor selecciona una invitación primero.",
+                    "Información", JOptionPane.PLAIN_MESSAGE);
+                return;
             }
+            int invitacionId = invitacionesPanel.getSeleccionGrupoId();
+            if (invitacionId == -1) {
+                JOptionPane.showMessageDialog(this, "Error al obtener el ID de la invitación.",
+                    "Error", JOptionPane.PLAIN_MESSAGE);
+                return;
+            }
+            responderInvitacionGrupo(invitacionId, true);
         });
         invitacionesPanel.getBtnRechazarGrupo().addActionListener(e -> {
-            int invitacionId = invitacionesPanel.getSeleccionGrupoId();
-            if (invitacionId != -1) {
-                responderInvitacionGrupo(invitacionId, false);
+            if (!invitacionesPanel.tieneSeleccionGrupo()) {
+                JOptionPane.showMessageDialog(this, "Por favor selecciona una invitación primero.",
+                    "Información", JOptionPane.PLAIN_MESSAGE);
+                return;
             }
+            int invitacionId = invitacionesPanel.getSeleccionGrupoId();
+            if (invitacionId == -1) {
+                JOptionPane.showMessageDialog(this, "Error al obtener el ID de la invitación.",
+                    "Error", JOptionPane.PLAIN_MESSAGE);
+                return;
+            }
+            responderInvitacionGrupo(invitacionId, false);
         });
     }
     private void abrirChatUsuario() {
@@ -278,6 +310,13 @@ public class ventana_principal_chat extends JFrame {
     }
     private void responderInvitacionAmigo(int invitacionId, boolean aceptar) {
         if (!Cliente.getInstance().estaConectado()) {
+            JOptionPane.showMessageDialog(this, "No hay conexión con el servidor.",
+                "Error de Conexión", JOptionPane.PLAIN_MESSAGE);
+            return;
+        }
+        if (invitacionId <= 0) {
+            JOptionPane.showMessageDialog(this, "ID de invitación inválido.",
+                "Error", JOptionPane.PLAIN_MESSAGE);
             return;
         }
         try {
@@ -285,7 +324,7 @@ public class ventana_principal_chat extends JFrame {
                 invitacionId);
             Cliente.getInstance().enviar(p);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+            JOptionPane.showMessageDialog(this, "Error al procesar la invitación: " + ex.getMessage(),
                 "Error", JOptionPane.PLAIN_MESSAGE);
         }
     }

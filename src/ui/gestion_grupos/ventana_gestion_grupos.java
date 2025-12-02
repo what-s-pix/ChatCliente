@@ -55,7 +55,7 @@ public class ventana_gestion_grupos extends JDialog {
         panelBotonesGrupos.add(btnSalirGrupo);
         panelGrupos.add(panelBotonesGrupos, BorderLayout.SOUTH);
         JPanel panelUsuarios = new JPanel(new BorderLayout());
-        panelUsuarios.setBorder(BorderFactory.createTitledBorder("Usuarios Disponibles"));
+        panelUsuarios.setBorder(BorderFactory.createTitledBorder("Amigos Disponibles"));
         modeloUsuarios = new DefaultListModel<>();
         listaUsuariosDisponibles = new JList<>(modeloUsuarios);
         listaUsuariosDisponibles.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -207,13 +207,38 @@ public class ventana_gestion_grupos extends JDialog {
     }
     private void cargarUsuarios() {
         try {
-            Peticion p = new Peticion("OBTENER_USUARIOS_DISPONIBLES", usuarioActualId);
-            Cliente.getInstance().enviar(p);
-            Peticion respuesta = Cliente.getInstance().recibir();
-            if (respuesta.getAccion().equals("USUARIOS_DISPONIBLES_OBTENIDOS")) {
+            java.util.Set<Integer> idsAmigos = new java.util.HashSet<>();
+            Peticion pAmigos = new Peticion("OBTENER_AMIGOS", usuarioActualId);
+            Cliente.getInstance().enviar(pAmigos);
+            Peticion respuestaAmigos = Cliente.getInstance().recibir();
+            if (respuestaAmigos.getAccion().equals("LISTA_AMIGOS_OK") || respuestaAmigos.getAccion().equals("AMIGOS_OBTENIDOS")) {
                 @SuppressWarnings("unchecked")
-                List<Usuario> usuarios = (List<Usuario>) respuesta.getDatos();
-                actualizarListaUsuarios(usuarios);
+                List<models.Amistad> amistades = (List<models.Amistad>) respuestaAmigos.getDatos();
+                for (models.Amistad amistad : amistades) {
+                    if ("aceptada".equals(amistad.getEstado())) {
+                        int otroUsuarioId = amistad.getFk_usuario1() == usuarioActualId ?
+                            amistad.getFk_usuario2() : amistad.getFk_usuario1();
+                        idsAmigos.add(otroUsuarioId);
+                    }
+                }
+            }
+            if (idsAmigos.isEmpty()) {
+                modeloUsuarios.clear();
+                return;
+            }
+            Peticion pUsuarios = new Peticion("OBTENER_USUARIOS", null);
+            Cliente.getInstance().enviar(pUsuarios);
+            Peticion respuestaUsuarios = Cliente.getInstance().recibir();
+            if (respuestaUsuarios.getAccion().equals("LISTA_USUARIOS")) {
+                @SuppressWarnings("unchecked")
+                List<Usuario> todosUsuarios = (List<Usuario>) respuestaUsuarios.getDatos();
+                java.util.List<Usuario> amigosUsuarios = new java.util.ArrayList<>();
+                for (Usuario usuario : todosUsuarios) {
+                    if (idsAmigos.contains(usuario.getPk_usuario())) {
+                        amigosUsuarios.add(usuario);
+                    }
+                }
+                actualizarListaUsuarios(amigosUsuarios);
             }
         } catch (Exception ex) {}
     }
