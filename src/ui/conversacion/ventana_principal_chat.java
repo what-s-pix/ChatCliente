@@ -5,7 +5,6 @@ import models.Amigo;
 import models.Grupo;
 import models.InvitacionGrupo;
 import models.Usuario;
-import ui.gestion_amigos.ventana_gestion_amigos;
 import ui.gestion_grupos.ventana_gestion_grupos;
 import ui.conversacion.componentes.panel_amigos;
 import ui.conversacion.componentes.panel_grupos;
@@ -73,16 +72,11 @@ public class ventana_principal_chat extends JFrame {
         tabbedPane.addTab("Amigos", amigosPanel);
         tabbedPane.addTab("Grupos", gruposPanel);
         panelListas.add(tabbedPane, BorderLayout.CENTER);
-        JPanel panelBotones = new JPanel(new GridLayout(2, 2, 5, 5));
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 5, 5));
         JButton btnSolicitud = new JButton("+ Solicitud Amistad");
-        JButton btnAmigos = new JButton("Gestión Amigos");
         JButton btnGrupos = new JButton("Gestión Grupos");
         JButton btnActualizar = new JButton("Actualizar");
         btnSolicitud.addActionListener(e -> enviarSolicitudAmistad());
-        btnAmigos.addActionListener(e -> {
-            new ventana_gestion_amigos(this, usuarioActual.getPk_usuario()).setVisible(true);
-            solicitarDatosIniciales();
-        });
         btnGrupos.addActionListener(e -> {
             new ventana_gestion_grupos(this, usuarioActual.getPk_usuario()).setVisible(true);
             solicitarDatosIniciales();
@@ -90,7 +84,6 @@ public class ventana_principal_chat extends JFrame {
         btnActualizar.addActionListener(e -> solicitarDatosIniciales());
         panelBotones.add(btnSolicitud);
         panelBotones.add(btnActualizar);
-        panelBotones.add(btnAmigos);
         panelBotones.add(btnGrupos);
         panelListas.add(panelBotones, BorderLayout.SOUTH);
         panelListas.setPreferredSize(new Dimension(250, 0));
@@ -195,7 +188,7 @@ public class ventana_principal_chat extends JFrame {
                     "Error", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
-            responderInvitacionAmigo(invitacionId, true);
+                responderInvitacionAmigo(invitacionId, true);
         });
         invitacionesPanel.getBtnRechazarAmigo().addActionListener(e -> {
             if (!invitacionesPanel.tieneSeleccionAmigo()) {
@@ -209,7 +202,7 @@ public class ventana_principal_chat extends JFrame {
                     "Error", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
-            responderInvitacionAmigo(invitacionId, false);
+                responderInvitacionAmigo(invitacionId, false);
         });
         invitacionesPanel.getBtnAceptarGrupo().addActionListener(e -> {
             if (!invitacionesPanel.tieneSeleccionGrupo()) {
@@ -223,7 +216,7 @@ public class ventana_principal_chat extends JFrame {
                     "Error", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
-            responderInvitacionGrupo(invitacionId, true);
+                responderInvitacionGrupo(invitacionId, true);
         });
         invitacionesPanel.getBtnRechazarGrupo().addActionListener(e -> {
             if (!invitacionesPanel.tieneSeleccionGrupo()) {
@@ -237,7 +230,7 @@ public class ventana_principal_chat extends JFrame {
                     "Error", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
-            responderInvitacionGrupo(invitacionId, false);
+                responderInvitacionGrupo(invitacionId, false);
         });
     }
     private void abrirChatUsuario() {
@@ -333,7 +326,7 @@ public class ventana_principal_chat extends JFrame {
             return;
         }
         try {
-            Peticion p = new Peticion(aceptar ? "ACEPTAR_INVITACION_GRUPO" :
+            Peticion p = new Peticion(aceptar ? "ACEPTAR_INVITACION_GRUPO" : 
                 "RECHAZAR_INVITACION_GRUPO", invitacionId);
             Cliente.getInstance().enviar(p);
             Cliente.getInstance().recibir();
@@ -362,7 +355,7 @@ public class ventana_principal_chat extends JFrame {
                 receptor.join(1000);
             } catch (InterruptedException e) {}
         }
-        procesador = new procesador_peticiones(usuariosPanel, amigosPanel,
+        procesador = new procesador_peticiones(usuariosPanel, amigosPanel, 
             gruposPanel, invitacionesPanel, ventanasChatAbiertas, mapaUsuarios);
         if (Cliente.getInstance().estaConectado()) {
             receptor = new receptor_mensajes(null, procesador);

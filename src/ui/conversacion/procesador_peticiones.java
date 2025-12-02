@@ -55,6 +55,32 @@ public class procesador_peticiones {
                 List<Usuario> usuarios = (List<Usuario>) p.getDatos();
                 actualizarMapaUsuarios(usuarios);
                 usuariosPanel.actualizarUsuarios(usuarios);
+                ui.gestion_grupos.ventana_gestion_grupos.actualizarUsuariosEnVentanas(usuarios);
+                break;
+            case "MIEMBROS_GRUPO_OK":
+                try {
+                    Object datos = p.getDatos();
+                    int grupoId = -1;
+                    List<Usuario> miembros = null;
+                    if (datos instanceof Object[]) {
+                        Object[] datosArray = (Object[]) datos;
+                        if (datosArray.length >= 2) {
+                            grupoId = (Integer) datosArray[0];
+                            @SuppressWarnings("unchecked")
+                            List<Usuario> miembrosTemp = (List<Usuario>) datosArray[1];
+                            miembros = miembrosTemp;
+                        }
+                    } else if (datos instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<Usuario> miembrosTemp = (List<Usuario>) datos;
+                        miembros = miembrosTemp;
+                    }
+                    if (miembros != null) {
+                        ui.gestion_grupos.ventana_gestion_grupos.actualizarMiembrosEnVentanas(miembros, grupoId);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             case "USUARIO_CONECTO":
             case "USUARIO_DESCONECTO":
@@ -66,12 +92,31 @@ public class procesador_peticiones {
             case "LISTA_AMIGOS_OK": // Este es el que envía el servidor
             case "AMIGOS_OBTENIDOS":
                 procesarListaAmigos(p.getDatos());
+                if (p.getDatos() instanceof List) {
+                    List<?> lista = (List<?>) p.getDatos();
+                    if (!lista.isEmpty() && lista.get(0) instanceof models.Amistad) {
+                        @SuppressWarnings("unchecked")
+                        List<models.Amistad> amistades = (List<models.Amistad>) lista;
+                        if (!amistades.isEmpty()) {
+                            int usuarioId = 0;
+                            if (amigosPanel != null) {
+                                usuarioId = amigosPanel.getUsuarioActualId();
+                            }
+                            if (usuarioId <= 0 && !amistades.isEmpty()) {
+                                models.Amistad primera = amistades.get(0);
+                                usuarioId = primera.getFk_usuario1();
+                            }
+                            ui.gestion_grupos.ventana_gestion_grupos.actualizarAmigosEnVentanas(amistades, usuarioId);
+                        }
+                    }
+                }
                 break;
             case "LISTA_GRUPOS_OK": // Este es el que envía el servidor
             case "GRUPOS_OBTENIDOS":
                 @SuppressWarnings("unchecked")
                 List<Grupo> grupos = (List<Grupo>) p.getDatos();
                 gruposPanel.actualizarGrupos(grupos);
+                ui.gestion_grupos.ventana_gestion_grupos.actualizarGruposEnVentanas(grupos);
                 break;
             case "LISTA_SOLICITUDES_OK": // Solicitudes de amistad
             case "INVITACIONES_OBTENIDAS":
@@ -119,18 +164,12 @@ public class procesador_peticiones {
             case "ACEPTAR_SOLICITUD_OK":
                 SwingUtilities.invokeLater(() -> {
                     try {
-                        Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
                         Cliente.getInstance().enviar(new Peticion("OBTENER_AMIGOS", null));
                         Cliente.getInstance().enviar(new Peticion("OBTENER_USUARIOS", null));
                     } catch (Exception e) {}
                 });
                 break;
             case "SOLICITUD_RECHAZADA":
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
-                    } catch (Exception e) {}
-                });
                 break;
             case "CREAR_GRUPO_OK":
             case "ACEPTAR_GRUPO_OK":

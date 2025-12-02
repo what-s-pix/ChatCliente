@@ -40,12 +40,19 @@ public class Cliente {
         if (entrada == null) {
             throw new IOException("No hay conexión activa. Llama a conectar() primero.");
         }
-        Object obj = entrada.readObject();
-        if (obj instanceof Peticion) {
-            return (Peticion) obj;
-        } else {
-            throw new ClassCastException("Se esperaba una Peticion pero se recibió: " +
-                (obj != null ? obj.getClass().getName() : "null") + " - " + obj);
+        try {
+            Object obj = entrada.readObject();
+            if (obj instanceof Peticion) {
+                return (Peticion) obj;
+            } else if (obj instanceof java.io.ObjectStreamClass) {
+                throw new ClassCastException("Error de serialización: el stream está desincronizado. " +
+                    "No uses recibir() directamente si hay un receptor_mensajes activo.");
+            } else {
+                throw new ClassCastException("Se esperaba una Peticion pero se recibió: " +
+                    (obj != null ? obj.getClass().getName() : "null"));
+            }
+        } catch (java.io.StreamCorruptedException e) {
+            throw new IOException("Error de serialización: el stream está corrupto o desincronizado.", e);
         }
     }
     public boolean estaConectado() {

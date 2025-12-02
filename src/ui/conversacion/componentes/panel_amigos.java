@@ -27,6 +27,9 @@ public class panel_amigos extends JPanel {
     public void setUsuarioActualId(int id) {
         this.usuarioActualId = id;
     }
+    public int getUsuarioActualId() {
+        return usuarioActualId;
+    }
     public void actualizarAmigos(List<Amigo> amigos, List<Usuario> usuarios) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             modeloAmigos.clear();
