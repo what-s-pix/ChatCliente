@@ -31,6 +31,8 @@ public class manejador_login {
     }
     
     public void hacerLogin() {
+        System.out.println("[DEBUG] ========== hacerLogin() llamado ==========");
+        
         String user = formPanel.getUsername();
         String pass = formPanel.getPassword();
         
@@ -40,56 +42,110 @@ public class manejador_login {
             return;
         }
         
-        try {
-            Cliente.getInstance().conectar();
+        // Deshabilitar el botón mientras se procesa
+        // (Esto se haría desde la ventana, pero por ahora solo hacemos el proceso asíncrono)
+        
+        // Ejecutar el login en un hilo separado para no bloquear la UI
+        new Thread(() -> {
+            try {
+                System.out.println("[DEBUG] [THREAD] Intentando conectar al servidor...");
+                Cliente.getInstance().conectar();
+                System.out.println("[DEBUG] [THREAD] Conexión exitosa, enviando petición LOGIN...");
+                
+                Usuario u = new Usuario(null, user, pass);
+                Peticion p = new Peticion("LOGIN", u);
+                
+                Cliente.getInstance().enviar(p);
+                System.out.println("[DEBUG] [THREAD] Petición enviada, esperando respuesta...");
+                Peticion respuesta = Cliente.getInstance().recibir();
+                System.out.println("[DEBUG] [THREAD] Respuesta recibida: " + respuesta.getAccion());
+                
+                // Actualizar UI en el hilo de Swing
+                SwingUtilities.invokeLater(() -> {
+                    procesarRespuestaLogin(respuesta);
+                });
+                
+            } catch (java.net.ConnectException e) {
+                System.out.println("[ERROR] ConnectException: " + e.getMessage());
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, 
+                        "No se pudo conectar al servidor.\n" +
+                        "Verifica que el servidor esté corriendo en " + 
+                        Cliente.getInstance().getHost() + ":" + Cliente.getInstance().getPuerto() + "\n\n" +
+                        "Error: " + e.getMessage(), 
+                        "Error de Conexión", 
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } catch (java.net.SocketTimeoutException e) {
+                System.out.println("[ERROR] SocketTimeoutException: " + e.getMessage());
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, 
+                        "Timeout al conectar con el servidor.\n" +
+                        "El servidor no respondió a tiempo.\n\n" +
+                        "Error: " + e.getMessage(), 
+                        "Timeout de Conexión", 
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } catch (Exception ex) {
+                System.out.println("[ERROR] Excepción: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+                ex.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, 
+                        "Error de conexión: " + ex.getMessage() + "\n\n" +
+                        "Tipo: " + ex.getClass().getSimpleName(), 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }).start();
+    }
+    
+    private void procesarRespuestaLogin(Peticion respuesta) {
+        if (respuesta.getAccion().equals("LOGIN_OK")) {
+            System.out.println("[DEBUG] Login exitoso! Procesando usuario...");
+            Usuario logueado = (Usuario) respuesta.getDatos();
+            System.out.println("[DEBUG] Usuario logueado: " + (logueado != null ? logueado.getNombre() : "null"));
+            intentosFallidos = 0;
             
-            Usuario u = new Usuario(null, user, pass);
-            Peticion p = new Peticion("LOGIN", u);
+            JOptionPane.showMessageDialog(null, 
+                "bienvenido " + logueado.getNombre() + "!");
             
-            Cliente.getInstance().enviar(p);
-            Peticion respuesta = Cliente.getInstance().recibir();
+            if (callback != null) {
+                System.out.println("[DEBUG] Llamando callback.onLoginExitoso()...");
+                callback.onLoginExitoso(logueado);
+                System.out.println("[DEBUG] Callback ejecutado!");
+            } else {
+                System.out.println("[ERROR] Callback es null! No se puede abrir la ventana principal.");
+            }
+        } else if (respuesta.getAccion().equals("LOGIN_BLOQUEADO")) {
+            JOptionPane.showMessageDialog(null, 
+                "cuenta bloqueada: " + respuesta.getDatos(), 
+                "error", 
+                JOptionPane.ERROR_MESSAGE);
+            intentosFallidos = MAX_INTENTOS;
+        } else {
+            intentosFallidos++;
+            int restantes = getIntentosRestantes();
             
-            if (respuesta.getAccion().equals("LOGIN_OK")) {
-                Usuario logueado = (Usuario) respuesta.getDatos();
-                intentosFallidos = 0;
+            if (restantes > 0) {
                 JOptionPane.showMessageDialog(null, 
-                    "bienvenido " + logueado.getNombre() + "!");
+                    "login fallido: " + respuesta.getDatos() + 
+                    "\nintentos restantes: " + restantes, 
+                    "error", 
+                    JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, 
+                    "has alcanzado el maximo de intentos.\n" +
+                    "seras redirigido al registro.", 
+                    "maximo de intentos", 
+                    JOptionPane.WARNING_MESSAGE);
                 
                 if (callback != null) {
-                    callback.onLoginExitoso(logueado);
-                }
-            } else if (respuesta.getAccion().equals("LOGIN_BLOQUEADO")) {
-                JOptionPane.showMessageDialog(null, 
-                    "cuenta bloqueada: " + respuesta.getDatos(), 
-                    "error", 
-                    JOptionPane.ERROR_MESSAGE);
-                intentosFallidos = MAX_INTENTOS;
-            } else {
-                intentosFallidos++;
-                int restantes = getIntentosRestantes();
-                
-                if (restantes > 0) {
-                    JOptionPane.showMessageDialog(null, 
-                        "login fallido: " + respuesta.getDatos() + 
-                        "\nintentos restantes: " + restantes, 
-                        "error", 
-                        JOptionPane.WARNING_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null, 
-                        "has alcanzado el maximo de intentos.\n" +
-                        "seras redirigido al registro.", 
-                        "maximo de intentos", 
-                        JOptionPane.WARNING_MESSAGE);
-                    
-                    if (callback != null) {
-                        callback.onMaxIntentosAlcanzados();
-                    }
+                    callback.onMaxIntentosAlcanzados();
                 }
             }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, 
-                "error de conexion: " + ex.getMessage());
-            ex.printStackTrace();
         }
     }
 }

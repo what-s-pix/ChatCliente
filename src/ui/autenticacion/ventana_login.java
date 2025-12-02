@@ -34,9 +34,22 @@ public class ventana_login extends JFrame {
         loginHandler.setCallback(new manejador_login.LoginCallback() {
             @Override
             public void onLoginExitoso(Usuario logueado) {
+                System.out.println("[DEBUG] Callback onLoginExitoso() llamado con usuario: " + (logueado != null ? logueado.getNombre() : "null"));
                 SwingUtilities.invokeLater(() -> {
-                    new ventana_principal_chat(logueado).setVisible(true);
-                    dispose();
+                    System.out.println("[DEBUG] Creando ventana_principal_chat...");
+                    try {
+                        new ventana_principal_chat(logueado).setVisible(true);
+                        System.out.println("[DEBUG] Ventana principal creada y visible!");
+                        dispose();
+                        System.out.println("[DEBUG] Ventana de login cerrada!");
+                    } catch (Exception e) {
+                        System.err.println("[ERROR] Error al crear ventana principal: " + e.getMessage());
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(null, 
+                            "Error al abrir la ventana principal: " + e.getMessage(), 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
                 });
             }
             
