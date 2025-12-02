@@ -29,7 +29,15 @@ public class Cliente {
         System.out.println("[DEBUG] Conectando a " + host + ":" + puerto + "...");
         socket.connect(new java.net.InetSocketAddress(host, puerto), 5000); // Timeout de 5 segundos
         System.out.println("[DEBUG] Conexión establecida! Creando streams...");
+        // IMPORTANTE: El servidor crea ObjectOutputStream primero y hace flush
+        // El cliente debe crear ObjectOutputStream primero también para sincronizar los headers
+        // Luego crear ObjectInputStream para leer
         salida = new ObjectOutputStream(socket.getOutputStream());
+        salida.flush(); // Asegurar que el header se envíe inmediatamente
+        // Pequeña pausa para que el servidor pueda crear su ObjectInputStream
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {}
         entrada = new ObjectInputStream(socket.getInputStream());
         System.out.println("[DEBUG] Conexión completada exitosamente!");
     }
@@ -44,7 +52,13 @@ public class Cliente {
         if (entrada == null) {
             throw new IOException("No hay conexión activa. Llama a conectar() primero.");
         }
-        return (Peticion) entrada.readObject();
+        Object obj = entrada.readObject();
+        if (obj instanceof Peticion) {
+            return (Peticion) obj;
+        } else {
+            throw new ClassCastException("Se esperaba una Peticion pero se recibió: " + 
+                (obj != null ? obj.getClass().getName() : "null") + " - " + obj);
+        }
     }
     public boolean estaConectado() {
         return socket != null && !socket.isClosed() && salida != null && entrada != null;

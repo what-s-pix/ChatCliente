@@ -6,6 +6,7 @@ import models.InvitacionGrupo;
 import models.Mensaje;
 import models.Usuario;
 import common.Peticion;
+import chatcliente.Cliente;
 import ui.conversacion.componentes.panel_amigos;
 import ui.conversacion.componentes.panel_grupos;
 import ui.conversacion.componentes.panel_invitaciones;
@@ -51,10 +52,23 @@ public class procesador_peticiones {
                 break;
                 
             case "USUARIOS_CONECTADOS":
+            case "LISTA_USUARIOS":
                 @SuppressWarnings("unchecked")
                 List<Usuario> usuarios = (List<Usuario>) p.getDatos();
+                System.out.println("[PROCESADOR] Recibida lista de usuarios: " + usuarios.size());
                 actualizarMapaUsuarios(usuarios);
                 usuariosPanel.actualizarUsuarios(usuarios);
+                break;
+            case "USUARIO_CONECTO":
+            case "USUARIO_DESCONECTO":
+                // Actualizar la lista cuando un usuario se conecta/desconecta
+                System.out.println("[PROCESADOR] Usuario " + (p.getAccion().equals("USUARIO_CONECTO") ? "conectado" : "desconectado"));
+                // Solicitar lista actualizada
+                try {
+                    Cliente.getInstance().enviar(new Peticion("OBTENER_USUARIOS", null));
+                } catch (Exception e) {
+                    System.err.println("[PROCESADOR] Error solicitando lista actualizada: " + e.getMessage());
+                }
                 break;
                 
             case "AMIGOS_OBTENIDOS":

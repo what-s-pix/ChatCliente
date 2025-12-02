@@ -290,10 +290,14 @@ public class ventana_principal_chat extends JFrame {
     
     private void solicitarDatosIniciales() {
         if (!Cliente.getInstance().estaConectado()) {
+            System.out.println("[VENTANA_PRINCIPAL] Cliente no conectado, no se pueden solicitar datos");
             return;
         }
         try {
-            Peticion p1 = new Peticion("OBTENER_USUARIOS_CONECTADOS", null);
+            System.out.println("[VENTANA_PRINCIPAL] Solicitando datos iniciales...");
+            // Solicitar TODOS los usuarios (conectados y desconectados)
+            Peticion p1 = new Peticion("OBTENER_USUARIOS", null);
+            System.out.println("[VENTANA_PRINCIPAL] Enviando petición OBTENER_USUARIOS...");
             Cliente.getInstance().enviar(p1);
             
             Peticion p2 = new Peticion("OBTENER_AMIGOS", usuarioActual.getPk_usuario());
@@ -312,15 +316,35 @@ public class ventana_principal_chat extends JFrame {
     }
     
     private void iniciarReceptorMensajes() {
+        // Asegurarse de que no haya un receptor anterior corriendo
+        if (receptor != null && receptor.isAlive()) {
+            System.out.println("[VENTANA_PRINCIPAL] Deteniendo receptor anterior...");
+            receptor.detener();
+            try {
+                receptor.join(1000); // Esperar hasta 1 segundo a que termine
+            } catch (InterruptedException e) {}
+        }
+        
         procesador = new procesador_peticiones(usuariosPanel, amigosPanel, 
             gruposPanel, invitacionesPanel, ventanasChatAbiertas, mapaUsuarios);
         if (Cliente.getInstance().estaConectado()) {
+            System.out.println("[VENTANA_PRINCIPAL] Iniciando nuevo receptor de mensajes...");
             receptor = new receptor_mensajes(null, procesador);
             receptor.start();
+        } else {
+            System.out.println("[VENTANA_PRINCIPAL] Cliente no conectado, no se puede iniciar receptor");
         }
     }
     
     private void cerrarChat() {
+        // Detener el receptor antes de cerrar
+        if (receptor != null && receptor.isAlive()) {
+            System.out.println("[VENTANA_PRINCIPAL] Deteniendo receptor al cerrar chat...");
+            receptor.detener();
+            try {
+                receptor.join(1000);
+            } catch (InterruptedException e) {}
+        }
         int opcion = JOptionPane.showConfirmDialog(
             this,
             "¿Estás seguro de que deseas salir?",

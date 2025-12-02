@@ -102,30 +102,67 @@ public class ventana_recuperar_contrasena extends JDialog {
             return;
         }
         
-        try {
-            Cliente.getInstance().conectar();
-            
-            Peticion p = new Peticion("RECUPERAR_CONTRASENA", 
-                new Object[] {username, nuevaPass});
-            
-            Cliente.getInstance().enviar(p);
-            Peticion respuesta = Cliente.getInstance().recibir();
-            
-            if (respuesta.getAccion().equals("RECUPERAR_OK")) {
-                JOptionPane.showMessageDialog(this, 
-                    "contrasena recuperada exitosamente.");
-                exito = true;
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                    "error: " + respuesta.getDatos(), 
-                    "error", 
-                    JOptionPane.ERROR_MESSAGE);
+        // Ejecutar en un hilo separado para no bloquear la UI
+        new Thread(() -> {
+            try {
+                System.out.println("[RECUPERAR] Conectando al servidor...");
+                Cliente.getInstance().conectar();
+                
+                Peticion p = new Peticion("RECUPERAR_CONTRASENA", 
+                    new Object[] {username, nuevaPass});
+                
+                System.out.println("[RECUPERAR] Enviando petición...");
+                Cliente.getInstance().enviar(p);
+                System.out.println("[RECUPERAR] Esperando respuesta...");
+                Peticion respuesta = Cliente.getInstance().recibir();
+                System.out.println("[RECUPERAR] Respuesta recibida: " + respuesta.getAccion());
+                
+                // Actualizar UI en el hilo de Swing
+                SwingUtilities.invokeLater(() -> {
+                    if (respuesta.getAccion().equals("RECUPERAR_OK")) {
+                        JOptionPane.showMessageDialog(this, 
+                            "contrasena recuperada exitosamente.");
+                        exito = true;
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(this, 
+                            "error: " + respuesta.getDatos(), 
+                            "error", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            } catch (java.net.ConnectException e) {
+                final String mensajeError = e.getMessage() != null ? e.getMessage() : "No se pudo conectar";
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, 
+                        "No se pudo conectar al servidor.\n" +
+                        "Verifica que el servidor esté corriendo.\n\n" +
+                        "Error: " + mensajeError, 
+                        "Error de Conexión", 
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            } catch (Exception ex) {
+                final String tipoExcepcion = ex.getClass().getSimpleName();
+                String mensajeTemp = ex.getMessage();
+                if (mensajeTemp == null || mensajeTemp.isEmpty()) {
+                    mensajeTemp = tipoExcepcion;
+                    if (ex.getCause() != null && ex.getCause().getMessage() != null) {
+                        mensajeTemp += ": " + ex.getCause().getMessage();
+                    }
+                }
+                final String mensajeError = mensajeTemp;
+                System.err.println("[RECUPERAR] Error: " + tipoExcepcion + " - " + mensajeError);
+                ex.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, 
+                        "Error de conexión: " + mensajeError + "\n\n" +
+                        "Tipo: " + tipoExcepcion + "\n\n" +
+                        "Verifica que el servidor esté corriendo.", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                });
             }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, 
-                "error de conexion: " + ex.getMessage());
-        }
+        }).start();
     }
     
     public boolean fueExitoso() {

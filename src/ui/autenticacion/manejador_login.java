@@ -89,12 +89,22 @@ public class manejador_login {
                         JOptionPane.ERROR_MESSAGE);
                 });
             } catch (Exception ex) {
-                System.out.println("[ERROR] Excepción: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+                final String tipoExcepcion = ex.getClass().getSimpleName();
+                String mensajeTemp = ex.getMessage();
+                if (mensajeTemp == null || mensajeTemp.isEmpty()) {
+                    mensajeTemp = tipoExcepcion;
+                    if (ex.getCause() != null && ex.getCause().getMessage() != null) {
+                        mensajeTemp += ": " + ex.getCause().getMessage();
+                    }
+                }
+                final String mensajeError = mensajeTemp;
+                System.out.println("[ERROR] Excepción: " + tipoExcepcion + " - " + mensajeError);
                 ex.printStackTrace();
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(null, 
-                        "Error de conexión: " + ex.getMessage() + "\n\n" +
-                        "Tipo: " + ex.getClass().getSimpleName(), 
+                        "Error de conexión: " + mensajeError + "\n\n" +
+                        "Tipo: " + tipoExcepcion + "\n\n" +
+                        "Verifica que el servidor esté corriendo.", 
                         "Error", 
                         JOptionPane.ERROR_MESSAGE);
                 });
