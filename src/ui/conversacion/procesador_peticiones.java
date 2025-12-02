@@ -159,10 +159,67 @@ public class procesador_peticiones {
                 break;
                 
             case "SOLICITUD_ENVIADA_OK":
+                System.out.println("[PROCESADOR] Solicitud enviada exitosamente");
+                // Actualizar lista de solicitudes
+                try {
+                    Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
+                } catch (Exception e) {
+                    System.err.println("[PROCESADOR] Error actualizando solicitudes: " + e.getMessage());
+                }
+                break;
+                
             case "ACEPTAR_SOLICITUD_OK":
+                System.out.println("[PROCESADOR] Solicitud aceptada exitosamente");
+                // Actualizar listas de amigos y solicitudes inmediatamente
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        // Actualizar solicitudes primero para que desaparezcan de la UI
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_AMIGOS", null));
+                        // También actualizar usuarios para tener la información completa
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_USUARIOS", null));
+                    } catch (Exception e) {
+                        System.err.println("[PROCESADOR] Error actualizando datos: " + e.getMessage());
+                    }
+                });
+                break;
+                
+            case "SOLICITUD_RECHAZADA":
+                System.out.println("[PROCESADOR] Solicitud rechazada");
+                // Actualizar lista de solicitudes inmediatamente
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_SOLICITUDES", null));
+                    } catch (Exception e) {
+                        System.err.println("[PROCESADOR] Error actualizando solicitudes: " + e.getMessage());
+                    }
+                });
+                break;
+                
             case "CREAR_GRUPO_OK":
             case "ACEPTAR_GRUPO_OK":
                 System.out.println("[PROCESADOR] Operación exitosa: " + accion);
+                // Actualizar lista de grupos e invitaciones inmediatamente
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_INVITACIONES_GRUPO", null));
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_GRUPOS", null));
+                    } catch (Exception e) {
+                        System.err.println("[PROCESADOR] Error actualizando grupos: " + e.getMessage());
+                    }
+                });
+                break;
+                
+            case "INVITACION_RECHAZADA":
+                System.out.println("[PROCESADOR] Invitación de grupo rechazada");
+                // Actualizar lista de invitaciones de grupo inmediatamente
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        Cliente.getInstance().enviar(new Peticion("OBTENER_INVITACIONES_GRUPO", null));
+                    } catch (Exception e) {
+                        System.err.println("[PROCESADOR] Error actualizando invitaciones de grupo: " + e.getMessage());
+                    }
+                });
                 break;
                 
             // === ERRORES ===

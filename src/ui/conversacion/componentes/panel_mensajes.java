@@ -68,67 +68,54 @@ public class panel_mensajes extends JPanel {
     private JPanel crearPanelMensaje(String contenido, String nombre, boolean esMio, boolean esGrupo) {
         JPanel panelContenedor = new JPanel(new BorderLayout());
         panelContenedor.setOpaque(false);
-        panelContenedor.setBorder(BorderFactory.createEmptyBorder(0, esMio ? 50 : 0, 0, esMio ? 0 : 50));
+        panelContenedor.setBorder(BorderFactory.createEmptyBorder(2, esMio ? 50 : 0, 2, esMio ? 0 : 50));
         
-        JPanel panelHorizontal = new JPanel(new FlowLayout(esMio ? FlowLayout.RIGHT : FlowLayout.LEFT, 0, 0));
-        panelHorizontal.setOpaque(false);
+        JPanel panelMensaje = new JPanel();
+        panelMensaje.setLayout(new BorderLayout(5, 5));
+        panelMensaje.setOpaque(true);
         
-        if (!esMio) {
-            JPanel avatar = new JPanel();
-            avatar.setPreferredSize(new Dimension(35, 35));
-            avatar.setMinimumSize(new Dimension(35, 35));
-            avatar.setMaximumSize(new Dimension(35, 35));
-            avatar.setOpaque(true);
-            avatar.setBackground(new Color(37, 211, 102));
-            avatar.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-            panelHorizontal.add(avatar);
-            panelHorizontal.add(Box.createHorizontalStrut(8));
-        }
+        // Usar colores estándar de Swing
+        Color colorFondo = esMio ? 
+            UIManager.getColor("Panel.background").darker() : 
+            UIManager.getColor("Panel.background");
+        panelMensaje.setBackground(colorFondo);
         
-        JPanel panelBurbuja = new JPanel();
-        panelBurbuja.setLayout(new BorderLayout(8, 4));
-        panelBurbuja.setOpaque(true);
-        
-        Color colorFondo = esMio ? new Color(220, 248, 198) : Color.WHITE;
-        panelBurbuja.setBackground(colorFondo);
-        panelBurbuja.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200, 50), 1, true),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        // Usar borde estándar de Swing
+        panelMensaje.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEtchedBorder(),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
         ));
         
         int maxWidth = 350;
+        panelMensaje.setMaximumSize(new Dimension(maxWidth, Integer.MAX_VALUE));
         
         if (esGrupo && !esMio) {
             JLabel labelNombre = new JLabel(nombre);
-            labelNombre.setFont(new Font("Arial", Font.BOLD, 12));
-            labelNombre.setForeground(new Color(37, 211, 102));
-            labelNombre.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
-            panelBurbuja.add(labelNombre, BorderLayout.NORTH);
+            labelNombre.setFont(UIManager.getFont("Label.font"));
+            labelNombre.setForeground(UIManager.getColor("Label.foreground"));
+            panelMensaje.add(labelNombre, BorderLayout.NORTH);
         }
         
-        JPanel panelTextoHora = new JPanel(new BorderLayout(8, 0));
+        JPanel panelTextoHora = new JPanel(new BorderLayout(5, 0));
         panelTextoHora.setOpaque(false);
         
         JLabel texto = new JLabel("<html><body style='width: " + (maxWidth - 80) + "px;'>" + 
             escapeHtml(contenido) + "</body></html>");
-        texto.setFont(new Font("Arial", Font.PLAIN, 14));
-        texto.setForeground(new Color(17, 27, 33));
+        texto.setFont(UIManager.getFont("Label.font"));
+        texto.setForeground(UIManager.getColor("Label.foreground"));
         texto.setVerticalAlignment(SwingConstants.TOP);
         panelTextoHora.add(texto, BorderLayout.CENTER);
         
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
         String timestamp = sdf.format(new Date());
         JLabel labelHora = new JLabel(timestamp);
-        labelHora.setFont(new Font("Arial", Font.PLAIN, 11));
-        labelHora.setForeground(new Color(102, 119, 129));
-        labelHora.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        labelHora.setFont(UIManager.getFont("Label.font").deriveFont(Font.PLAIN, 10f));
+        labelHora.setForeground(UIManager.getColor("Label.disabledForeground"));
         panelTextoHora.add(labelHora, BorderLayout.EAST);
         
-        panelBurbuja.add(panelTextoHora, BorderLayout.CENTER);
-        panelBurbuja.setMaximumSize(new Dimension(maxWidth, Integer.MAX_VALUE));
+        panelMensaje.add(panelTextoHora, BorderLayout.CENTER);
         
-        panelHorizontal.add(panelBurbuja);
-        panelContenedor.add(panelHorizontal, BorderLayout.CENTER);
+        panelContenedor.add(panelMensaje, esMio ? BorderLayout.EAST : BorderLayout.WEST);
         
         return panelContenedor;
     }

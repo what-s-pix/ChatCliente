@@ -85,11 +85,6 @@ public class ventana_conversacion extends JFrame {
         panelPrincipal.add(envioPanel, BorderLayout.SOUTH);
         
         add(panelPrincipal, BorderLayout.CENTER);
-        
-        String mensajeBienvenida = esGrupo ? 
-            "Bienvenido al grupo!" : 
-            "Conversación con " + destinatario.getNombre();
-        mensajesPanel.agregarMensajeSistema(mensajeBienvenida);
     }
     
     private void cargarHistorial() {

@@ -76,18 +76,19 @@ public class ventana_gestion_amigos extends JDialog {
                 int opcion = JOptionPane.showConfirmDialog(this,
                     "Enviar solicitud de amistad a " + encontrado.getNombre() + "?",
                     "Enviar Solicitud",
-                    JOptionPane.YES_NO_OPTION);
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
                 
                 if (opcion == JOptionPane.YES_OPTION) {
                     enviarInvitacion(encontrado.getPk_usuario());
                 }
             } else {
                 JOptionPane.showMessageDialog(this,
-                    "Usuario no encontrado.");
+                    "Usuario no encontrado.", "Error", JOptionPane.PLAIN_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                "Error: " + ex.getMessage());
+                "Error: " + ex.getMessage(), "Error", JOptionPane.PLAIN_MESSAGE);
         }
     }
     
@@ -100,14 +101,14 @@ public class ventana_gestion_amigos extends JDialog {
             
             if (respuesta.getAccion().equals("INVITACION_ENVIADA")) {
                 JOptionPane.showMessageDialog(this,
-                    "Invitación enviada exitosamente.");
+                    "Invitación enviada exitosamente.", "Información", JOptionPane.PLAIN_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this,
-                    "Error: " + respuesta.getDatos());
+                    "Error: " + respuesta.getDatos(), "Error", JOptionPane.PLAIN_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                "Error: " + ex.getMessage());
+                "Error: " + ex.getMessage(), "Error", JOptionPane.PLAIN_MESSAGE);
         }
     }
     

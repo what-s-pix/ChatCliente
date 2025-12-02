@@ -190,27 +190,49 @@ public class ventana_principal_chat extends JFrame {
     
     private void enviarSolicitudAmistad() {
         if (!usuariosPanel.tieneSeleccion()) {
-            JOptionPane.showMessageDialog(this, "Selecciona un usuario primero");
+            JOptionPane.showMessageDialog(this, "Selecciona un usuario primero", 
+                "Información", JOptionPane.PLAIN_MESSAGE);
             return;
         }
         
         int usuarioId = usuariosPanel.getSeleccionId();
-        String nombreUsuario = usuariosPanel.getSeleccion();
+        String seleccionCompleta = usuariosPanel.getSeleccion();
+        
+        // Extraer solo el nombre de usuario (sin [Online], sin paréntesis)
+        String nombreUsuario = extraerNombreUsuario(seleccionCompleta);
         
         int confirm = JOptionPane.showConfirmDialog(this,
             "¿Enviar solicitud de amistad a " + nombreUsuario + "?",
             "Confirmar Solicitud",
-            JOptionPane.YES_NO_OPTION);
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.PLAIN_MESSAGE);
         
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 Peticion p = new Peticion("ENVIAR_SOLICITUD_AMISTAD", usuarioId);
                 Cliente.getInstance().enviar(p);
-                JOptionPane.showMessageDialog(this, "Solicitud enviada!");
+                JOptionPane.showMessageDialog(this, "Solicitud enviada!", 
+                    "Información", JOptionPane.PLAIN_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error enviando solicitud: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Error enviando solicitud: " + ex.getMessage(),
+                    "Error", JOptionPane.PLAIN_MESSAGE);
             }
         }
+    }
+    
+    private String extraerNombreUsuario(String seleccionCompleta) {
+        // Formato: "[Online] nombre (username)" o "[Offline] nombre (username)"
+        // Queremos solo "nombre"
+        if (seleccionCompleta == null) return "";
+        
+        // Quitar [Online] o [Offline]
+        String sinEstado = seleccionCompleta.replaceFirst("\\[Online\\]\\s*", "")
+                                            .replaceFirst("\\[Offline\\]\\s*", "");
+        
+        // Quitar los paréntesis y su contenido
+        String sinParentesis = sinEstado.replaceAll("\\s*\\([^)]*\\)", "");
+        
+        return sinParentesis.trim();
     }
     
     private void configurarBotonesInvitaciones() {
@@ -253,7 +275,8 @@ public class ventana_principal_chat extends JFrame {
         Usuario destinatario = mapaUsuarios.get(usuarioId);
         
         if (destinatario == null) {
-            JOptionPane.showMessageDialog(this, "Usuario no encontrado.");
+            JOptionPane.showMessageDialog(this, "Usuario no encontrado.", 
+                "Error", JOptionPane.PLAIN_MESSAGE);
             return;
         }
         
@@ -283,7 +306,8 @@ public class ventana_principal_chat extends JFrame {
         
         Usuario amigo = mapaUsuarios.get(amigoId);
         if (amigo == null) {
-            JOptionPane.showMessageDialog(this, "Amigo no encontrado.");
+            JOptionPane.showMessageDialog(this, "Amigo no encontrado.", 
+                "Error", JOptionPane.PLAIN_MESSAGE);
             return;
         }
         
@@ -316,14 +340,14 @@ public class ventana_principal_chat extends JFrame {
             return;
         }
         try {
-            Peticion p = new Peticion(aceptar ? "ACEPTAR_INVITACION" : "RECHAZAR_INVITACION",
+            Peticion p = new Peticion(aceptar ? "ACEPTAR_SOLICITUD_AMISTAD" : "RECHAZAR_SOLICITUD_AMISTAD",
                 invitacionId);
             Cliente.getInstance().enviar(p);
-            Cliente.getInstance().recibir();
-            
-            solicitarDatosIniciales();
+            // No llamar a recibir() aquí - el receptor de mensajes manejará la respuesta
+            // solicitarDatosIniciales() se llamará cuando el procesador reciba ACEPTAR_SOLICITUD_OK
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                "Error", JOptionPane.PLAIN_MESSAGE);
         }
     }
     
@@ -339,7 +363,8 @@ public class ventana_principal_chat extends JFrame {
             
             solicitarDatosIniciales();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                "Error", JOptionPane.PLAIN_MESSAGE);
         }
     }
     
@@ -406,7 +431,8 @@ public class ventana_principal_chat extends JFrame {
             this,
             "¿Estás seguro de que deseas salir?",
             "Confirmar Salida",
-            JOptionPane.YES_NO_OPTION
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.PLAIN_MESSAGE
         );
         
         if (opcion == JOptionPane.YES_OPTION) {
