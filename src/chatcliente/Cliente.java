@@ -10,7 +10,7 @@ public class Cliente {
     private ObjectOutputStream salida;
     private ObjectInputStream entrada;
     private String host = "localhost";
-    private int puerto = 5000; 
+    private int puerto = 5000;
     private Cliente() {}
     public static Cliente getInstance() {
         if (instance == null) {
@@ -19,27 +19,15 @@ public class Cliente {
         return instance;
     }
     public void conectar() throws IOException {
-        System.out.println("[DEBUG] Intentando conectar a " + host + ":" + puerto);
-        // Cerrar conexión anterior si existe
         cerrar();
-        
-        // Crear nueva conexión
-        System.out.println("[DEBUG] Creando socket...");
         socket = new Socket();
-        System.out.println("[DEBUG] Conectando a " + host + ":" + puerto + "...");
-        socket.connect(new java.net.InetSocketAddress(host, puerto), 5000); // Timeout de 5 segundos
-        System.out.println("[DEBUG] Conexión establecida! Creando streams...");
-        // IMPORTANTE: El servidor crea ObjectOutputStream primero y hace flush
-        // El cliente debe crear ObjectOutputStream primero también para sincronizar los headers
-        // Luego crear ObjectInputStream para leer
+        socket.connect(new java.net.InetSocketAddress(host, puerto), 5000);
         salida = new ObjectOutputStream(socket.getOutputStream());
-        salida.flush(); // Asegurar que el header se envíe inmediatamente
-        // Pequeña pausa para que el servidor pueda crear su ObjectInputStream
+        salida.flush();
         try {
             Thread.sleep(50);
         } catch (InterruptedException e) {}
         entrada = new ObjectInputStream(socket.getInputStream());
-        System.out.println("[DEBUG] Conexión completada exitosamente!");
     }
     public void enviar(Peticion p) throws IOException {
         if (salida == null) {
@@ -56,7 +44,7 @@ public class Cliente {
         if (obj instanceof Peticion) {
             return (Peticion) obj;
         } else {
-            throw new ClassCastException("Se esperaba una Peticion pero se recibió: " + 
+            throw new ClassCastException("Se esperaba una Peticion pero se recibió: " +
                 (obj != null ? obj.getClass().getName() : "null") + " - " + obj);
         }
     }
